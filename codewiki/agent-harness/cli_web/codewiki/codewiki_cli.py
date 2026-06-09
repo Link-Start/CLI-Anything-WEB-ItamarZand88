@@ -32,8 +32,15 @@ _skin = ReplSkin("codewiki", version="0.1.0")
 
 
 @click.group(invoke_without_command=True)
-@click.option("--json", "as_json", is_flag=True, default=False, hidden=True,
-              help="Output as JSON (pass to subcommands).")
+@click.version_option("0.1.0", prog_name="cli-web-codewiki")
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    default=False,
+    hidden=True,
+    help="Output as JSON (pass to subcommands).",
+)
 @click.pass_context
 def cli(ctx: click.Context, as_json: bool) -> None:
     """cli-web-codewiki — Browse AI-generated code documentation."""

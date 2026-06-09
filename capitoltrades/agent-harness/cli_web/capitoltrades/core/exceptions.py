@@ -5,6 +5,7 @@ Every exception carries enough context for:
 - Structured JSON output (to_dict / error_code_for)
 - CLI exit codes (auth=1, server=2, network=3)
 """
+
 from __future__ import annotations
 
 

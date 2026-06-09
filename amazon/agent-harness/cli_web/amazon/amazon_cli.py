@@ -1,4 +1,5 @@
 """cli-web-amazon entry point — Amazon CLI."""
+
 import sys
 
 # Windows UTF-8 fix — must be before any imports that print
@@ -17,10 +18,10 @@ import shlex
 
 import click
 
+from .commands.bestsellers import bestsellers
+from .commands.product import product
 from .commands.search import search
 from .commands.suggest import suggest
-from .commands.product import product
-from .commands.bestsellers import bestsellers
 from .core.exceptions import AmazonError
 from .utils.repl_skin import ReplSkin
 
@@ -52,8 +53,9 @@ def _print_repl_help():
 
 
 @click.group(invoke_without_command=True)
-@click.option("--json", "json_mode", is_flag=True, default=False,
-              help="Output all results as JSON.")
+@click.option(
+    "--json", "json_mode", is_flag=True, default=False, help="Output all results as JSON."
+)
 @click.version_option(__version__, "--version", "-V")
 @click.pass_context
 def cli(ctx, json_mode):
@@ -121,6 +123,7 @@ def _run_repl(ctx, json_mode: bool):
         except Exception as exc:
             if json_mode and isinstance(exc, AmazonError):
                 import json as _json
+
                 click.echo(_json.dumps(exc.to_dict()))
             else:
                 _skin.error(str(exc))
@@ -131,7 +134,6 @@ cli.add_command(search)
 cli.add_command(suggest)
 cli.add_command(product)
 cli.add_command(bestsellers)
-
 
 
 def main():

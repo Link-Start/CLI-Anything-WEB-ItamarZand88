@@ -52,6 +52,7 @@ cli.add_command(auth_group)
 
 # ── REPL ────────────────────────────────────────────────────────────
 
+
 def _run_repl(ctx: click.Context | None = None):
     """Interactive REPL mode."""
     from .utils.repl_skin import ReplSkin

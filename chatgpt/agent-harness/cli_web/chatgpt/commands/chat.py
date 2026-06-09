@@ -23,7 +23,11 @@ def chat_group():
 
 @chat_group.command("ask")
 @click.argument("question")
-@click.option("--model", default=None, help="Model slug (e.g. gpt-5-4-thinking). Use 'models' command to list.")
+@click.option(
+    "--model",
+    default=None,
+    help="Model slug (e.g. gpt-5-4-thinking). Use 'models' command to list.",
+)
 @click.option("--conversation", default=None, help="Continue an existing conversation by ID.")
 @click.option("--json", "json_mode", is_flag=True, help="Output as JSON.")
 @click.pass_context
@@ -52,14 +56,16 @@ def ask(ctx, question: str, model: str | None, conversation: str | None, json_mo
             conv_id = result.get("conversation_id")
 
             if json_mode:
-                print_json({
-                    "success": True,
-                    "data": {
-                        "text": text,
-                        "conversation_id": conv_id,
-                        "model": model or "default",
-                    },
-                })
+                print_json(
+                    {
+                        "success": True,
+                        "data": {
+                            "text": text,
+                            "conversation_id": conv_id,
+                            "model": model or "default",
+                        },
+                    }
+                )
             else:
                 if _RICH and text:
                     Console().print(Markdown(text))
@@ -74,7 +80,14 @@ def ask(ctx, question: str, model: str | None, conversation: str | None, json_mo
 @click.option("--conversation", default=None, help="Continue an existing conversation by ID.")
 @click.option("--json", "json_mode", is_flag=True, help="Output as JSON.")
 @click.pass_context
-def image(ctx, prompt: str, style: str | None, output: str | None, conversation: str | None, json_mode: bool) -> None:
+def image(
+    ctx,
+    prompt: str,
+    style: str | None,
+    output: str | None,
+    conversation: str | None,
+    json_mode: bool,
+) -> None:
     """Generate an image with ChatGPT."""
     json_mode = resolve_json_mode(json_mode)
     full_prompt = f"{style} style: {prompt}" if style else prompt
@@ -123,7 +136,9 @@ def image(ctx, prompt: str, style: str | None, output: str | None, conversation:
                 if file_id:
                     click.echo(f"Image generated: file_id={file_id}")
                     if download_url:
-                        click.echo(f"Download: cli-web-chatgpt images download {file_id} -c {conv_id}")
+                        click.echo(
+                            f"Download: cli-web-chatgpt images download {file_id} -c {conv_id}"
+                        )
                 elif text:
                     click.echo(text)
                 else:

@@ -11,6 +11,7 @@ class AuthError(NotebookLMError):
     Args:
         recoverable: If True, client should refresh tokens and retry once.
     """
+
     def __init__(self, message: str, recoverable: bool = True):
         self.recoverable = recoverable
         super().__init__(message)
@@ -22,6 +23,7 @@ class RateLimitError(NotebookLMError):
     Args:
         retry_after: Seconds to wait before retrying.
     """
+
     def __init__(self, message: str, retry_after: float | None = None):
         self.retry_after = retry_after
         super().__init__(message)
@@ -37,6 +39,7 @@ class ServerError(NotebookLMError):
     Args:
         status_code: The HTTP status code.
     """
+
     def __init__(self, message: str, status_code: int = 500):
         self.status_code = status_code
         super().__init__(message)

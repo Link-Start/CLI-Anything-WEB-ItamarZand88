@@ -1,0 +1,20 @@
+{
+  "manifest_version": 1,
+  "cli": "cli-web-capitoltrades",
+  "generator": {
+    "plugin_version": "unknown",
+    "note": "backfilled by cli-web-devkit"
+  },
+  "profile": {
+    "protocol": "SSR HTML + BFF JSON (curl_cffi)",
+    "auth": "none"
+  },
+  "shared_files": {
+    "utils/repl_skin.py": {
+      "source": "cli-web-core/cli_web_core/repl_skin.py",
+      "sha256": "7418b9f1965683c98a96475cf57ff55855cba50eb76d630d630a4b6dda9f3c3d",
+      "synced_at": "2026-06-09T22:13:49Z"
+    }
+  },
+  "overrides": []
+}

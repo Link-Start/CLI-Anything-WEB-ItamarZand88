@@ -73,14 +73,15 @@ def login_browser() -> dict[str, Any]:
     """Open browser for OpenAI SSO login and extract auth tokens."""
     if sys.platform == "win32":
         import asyncio
+
         asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
 
     try:
         from playwright.sync_api import sync_playwright
-    except ImportError:
+    except ImportError as exc:
         raise AuthError(
             "playwright not installed. Run: pip install playwright && playwright install chromium"
-        )
+        ) from exc
 
     with sync_playwright() as p:
         user_data = CONFIG_DIR / "browser-data"
@@ -152,9 +153,7 @@ def login_browser() -> dict[str, Any]:
         context.close()
 
         if not access_token:
-            raise AuthError(
-                "Could not extract access token. Make sure you're fully logged in."
-            )
+            raise AuthError("Could not extract access token. Make sure you're fully logged in.")
 
         auth_data = {
             "access_token": access_token,

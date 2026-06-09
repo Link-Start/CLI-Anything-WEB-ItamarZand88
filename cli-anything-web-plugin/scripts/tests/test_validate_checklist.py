@@ -5,6 +5,7 @@ Two test styles:
 2. Synthetic minimal harnesses that trigger specific checks in isolation
    (catches regressions on individual check IDs).
 """
+
 from __future__ import annotations
 
 import json
@@ -23,12 +24,17 @@ def _validate(harness: Path, app_name: str, auth_type: str = "cookie") -> dict:
     """Run the validator in --json mode and return the parsed report."""
     result = subprocess.run(
         [
-            sys.executable, str(VALIDATE), str(harness),
-            "--app-name", app_name,
-            "--auth-type", auth_type,
+            sys.executable,
+            str(VALIDATE),
+            str(harness),
+            "--app-name",
+            app_name,
+            "--auth-type",
+            auth_type,
             "--json",
         ],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     # Non-zero exit is normal when there are failures — we parse anyway.
     assert result.stdout, f"no stdout; stderr: {result.stderr}"
@@ -45,17 +51,27 @@ def _check(report: dict, check_id: str) -> dict:
 
 # --- Fixture: freshly scaffolded CLI (incomplete but structurally valid) ---
 
+
 @pytest.fixture(scope="module")
 def scaffolded_harness(tmp_path_factory):
     harness = tmp_path_factory.mktemp("harness") / "agent-harness"
-    subprocess.check_call([
-        sys.executable, str(SCAFFOLD), str(harness),
-        "--app-name", "vcapp",
-        "--protocol", "rest",
-        "--http-client", "httpx",
-        "--auth-type", "cookie",
-        "--resources", "items",
-    ])
+    subprocess.check_call(
+        [
+            sys.executable,
+            str(SCAFFOLD),
+            str(harness),
+            "--app-name",
+            "vcapp",
+            "--protocol",
+            "rest",
+            "--http-client",
+            "httpx",
+            "--auth-type",
+            "cookie",
+            "--resources",
+            "items",
+        ]
+    )
     return harness
 
 
@@ -83,14 +99,23 @@ def test_scaffolded_cli_has_required_files(scaffolded_harness):
 def test_scaffolded_auth_none_skips_auth_file_check(tmp_path):
     """For --auth-type none, check 2.5 should report N/A, not FAIL."""
     harness = tmp_path / "no-auth"
-    subprocess.check_call([
-        sys.executable, str(SCAFFOLD), str(harness),
-        "--app-name", "noauth",
-        "--protocol", "rest",
-        "--http-client", "httpx",
-        "--auth-type", "none",
-        "--resources", "x",
-    ])
+    subprocess.check_call(
+        [
+            sys.executable,
+            str(SCAFFOLD),
+            str(harness),
+            "--app-name",
+            "noauth",
+            "--protocol",
+            "rest",
+            "--http-client",
+            "httpx",
+            "--auth-type",
+            "none",
+            "--resources",
+            "x",
+        ]
+    )
     report = _validate(harness, "noauth", auth_type="none")
     assert _check(report, "2.5")["status"] == "na"
 
@@ -114,18 +139,29 @@ def test_validator_reports_app_name_and_auth_type(scaffolded_harness):
 
 # --- Synthetic failure detection ---
 
-def _make_minimal_harness(tmp_path: Path, app_name: str = "tapp",
-                          auth_type: str = "cookie") -> Path:
+
+def _make_minimal_harness(
+    tmp_path: Path, app_name: str = "tapp", auth_type: str = "cookie"
+) -> Path:
     """Create a minimal valid harness so we can mutate it per test."""
     harness = tmp_path / "harness"
-    subprocess.check_call([
-        sys.executable, str(SCAFFOLD), str(harness),
-        "--app-name", app_name,
-        "--protocol", "rest",
-        "--http-client", "httpx",
-        "--auth-type", auth_type,
-        "--resources", "items",
-    ])
+    subprocess.check_call(
+        [
+            sys.executable,
+            str(SCAFFOLD),
+            str(harness),
+            "--app-name",
+            app_name,
+            "--protocol",
+            "rest",
+            "--http-client",
+            "httpx",
+            "--auth-type",
+            auth_type,
+            "--resources",
+            "items",
+        ]
+    )
     return harness
 
 
@@ -183,13 +219,19 @@ def test_detects_missing_auth_when_required(tmp_path):
 
 # --- Error handling / argparse ---
 
+
 def test_rejects_non_existent_harness_dir(tmp_path):
     result = subprocess.run(
         [
-            sys.executable, str(VALIDATE), str(tmp_path / "nonexistent"),
-            "--app-name", "x", "--json",
+            sys.executable,
+            str(VALIDATE),
+            str(tmp_path / "nonexistent"),
+            "--app-name",
+            "x",
+            "--json",
         ],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode != 0
     assert "not a directory" in result.stderr
@@ -198,11 +240,17 @@ def test_rejects_non_existent_harness_dir(tmp_path):
 def test_rejects_unknown_auth_type(scaffolded_harness):
     result = subprocess.run(
         [
-            sys.executable, str(VALIDATE), str(scaffolded_harness),
-            "--app-name", "vcapp", "--auth-type", "oauth",
+            sys.executable,
+            str(VALIDATE),
+            str(scaffolded_harness),
+            "--app-name",
+            "vcapp",
+            "--auth-type",
+            "oauth",
             "--json",
         ],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode != 0
 
@@ -211,6 +259,7 @@ def test_run_without_app_name_errors(tmp_path):
     harness = _make_minimal_harness(tmp_path)
     result = subprocess.run(
         [sys.executable, str(VALIDATE), str(harness), "--json"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode != 0

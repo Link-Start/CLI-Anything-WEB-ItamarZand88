@@ -18,7 +18,6 @@ if sys.stderr.encoding and sys.stderr.encoding.lower() not in ("utf-8", "utf8"):
 import shlex
 
 import click
-
 from cli_web.hackernews.commands.actions import (
     comment_cmd,
     favorite_cmd,

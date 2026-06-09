@@ -139,11 +139,11 @@ def login_browser() -> dict[str, str]:
 
     try:
         from playwright.sync_api import sync_playwright
-    except ImportError:
+    except ImportError as exc:
         raise AuthError(
             "Browser login requires playwright. Install: pip install playwright && playwright install chromium",
             recoverable=False,
-        )
+        ) from exc
 
     user_data_dir = str(_get_config_dir() / "browser-profile")
 
@@ -169,9 +169,9 @@ def login_browser() -> dict[str, str]:
                 lambda url: "login" not in url,
                 timeout=300_000,
             )
-        except Exception:
+        except Exception as exc:
             context.close()
-            raise AuthError("Login timed out after 5 minutes", recoverable=False)
+            raise AuthError("Login timed out after 5 minutes", recoverable=False) from exc
 
         # Extract cookies
         cookies = context.cookies("https://news.ycombinator.com")
@@ -218,7 +218,9 @@ def validate_auth() -> dict[str, Any]:
         raise AuthError("Auth validation failed — cookie may be expired", recoverable=False)
 
     # Check if we're actually logged in (page shows logout link)
-    if f'id="logout"' not in response.text and "logout" not in response.text:
-        raise AuthError("Auth cookie expired. Run: cli-web-hackernews auth login", recoverable=False)
+    if 'id="logout"' not in response.text and "logout" not in response.text:
+        raise AuthError(
+            "Auth cookie expired. Run: cli-web-hackernews auth login", recoverable=False
+        )
 
     return {"username": username, "valid": True}

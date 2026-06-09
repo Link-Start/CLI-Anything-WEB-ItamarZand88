@@ -1,8 +1,10 @@
 """Evolution commands: list, get."""
+
 import click
+
 from ..core.client import FutbinClient
-from ..utils.output import print_json, print_table, print_evolution_detail
 from ..utils.helpers import handle_errors, require_year
+from ..utils.output import print_evolution_detail, print_json, print_table
 
 
 @click.group()

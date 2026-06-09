@@ -8,6 +8,7 @@ Usage:
     cli-web-producthunt posts leaderboard --period weekly
     cli-web-producthunt users get rrhoover
 """
+
 import sys
 
 # Force UTF-8 output on Windows to handle Unicode characters
@@ -25,7 +26,6 @@ if sys.stderr.encoding and sys.stderr.encoding.lower() not in ("utf-8", "utf8"):
 import shlex
 
 import click
-
 from cli_web.producthunt.commands.posts import posts
 from cli_web.producthunt.commands.users import users
 from cli_web.producthunt.utils.repl_skin import ReplSkin

@@ -1,10 +1,15 @@
 """Config commands: set, get, show, reset persistent CLI settings."""
+
 import click
-from ..utils.output import print_json
+
 from ..utils.helpers import (
-    handle_errors, get_config_value, set_config_value,
-    clear_config, get_all_config,
+    clear_config,
+    get_all_config,
+    get_config_value,
+    handle_errors,
+    set_config_value,
 )
+from ..utils.output import print_json
 
 VALID_KEYS = {"year", "platform"}
 

@@ -1,8 +1,10 @@
 """SBC commands: list, get."""
+
 import click
+
 from ..core.client import FutbinClient
-from ..utils.output import print_json, print_table, print_sbc_detail
 from ..utils.helpers import handle_errors, require_year
+from ..utils.output import print_json, print_sbc_detail, print_table
 
 
 @click.group()

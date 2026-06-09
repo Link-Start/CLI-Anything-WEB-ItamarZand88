@@ -1,4 +1,5 @@
 """cli-web-stitch — CLI entry point and REPL for Google Stitch AI design tool."""
+
 import sys
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
@@ -13,13 +14,14 @@ import shlex
 import click
 
 from .commands.auth_cmd import auth
+from .commands.design import design
 from .commands.projects import projects
 from .commands.screens import screens
-from .commands.design import design
-from .utils.helpers import set_context_value, get_context_value, handle_errors
+from .utils.helpers import get_context_value, handle_errors, set_context_value
 
 
 @click.group(invoke_without_command=True)
+@click.version_option("0.1.0", prog_name="cli-web-stitch")
 @click.option("--json", "json_mode", is_flag=True, help="JSON output")
 @click.pass_context
 def cli(ctx, json_mode):
@@ -65,6 +67,7 @@ def show_status(use_json):
 
 
 # ── REPL ──────────────────────────────────────────────────────────────
+
 
 def _repl(ctx):
     from .utils.repl_skin import ReplSkin

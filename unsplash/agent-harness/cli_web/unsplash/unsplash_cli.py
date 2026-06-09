@@ -58,7 +58,9 @@ def _print_repl_help():
     print()
     print("  topics list               [--order-by featured|latest|oldest|position]")
     print("  topics get <slug>         Topic details")
-    print("  topics photos <slug>      [--page N] [--per-page N] [--order-by latest|oldest|popular]")
+    print(
+        "  topics photos <slug>      [--page N] [--per-page N] [--order-by latest|oldest|popular]"
+    )
     print()
     print("  collections search <q>    [--page N] [--per-page N]")
     print("  collections get <id>      Collection details")

@@ -89,9 +89,4 @@ def print_developers_table(developers: list) -> None:
         name = _safe(dev.name or "", col_name)
         login = _safe(dev.login, col_login)
         repo = _safe(dev.popular_repo or "", col_repo)
-        print(
-            f"{dev.rank:<{col_rank}} "
-            f"{login:<{col_login}} "
-            f"{name:<{col_name}} "
-            f"{repo:<{col_repo}}"
-        )
+        print(f"{dev.rank:<{col_rank}} {login:<{col_login}} {name:<{col_name}} {repo:<{col_repo}}")

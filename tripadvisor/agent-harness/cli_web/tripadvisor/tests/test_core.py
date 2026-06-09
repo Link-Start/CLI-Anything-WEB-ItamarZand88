@@ -6,9 +6,17 @@ model builders), models, and helpers. No live HTTP calls.
 
 from __future__ import annotations
 
-import json
-import pytest
-
+from cli_web.tripadvisor.core.client import (
+    _build_attraction,
+    _build_hotel,
+    _build_restaurant,
+    _extract_id_from_url,
+    _extract_jsonld_blocks,
+    _find_jsonld_by_type,
+    _find_jsonld_items,
+    _make_slug,
+    _slug_from_url,
+)
 from cli_web.tripadvisor.core.exceptions import (
     AuthError,
     NetworkError,
@@ -18,28 +26,17 @@ from cli_web.tripadvisor.core.exceptions import (
     ServerError,
     TripAdvisorError,
 )
-from cli_web.tripadvisor.core.client import (
-    _extract_id_from_url,
-    _extract_jsonld_blocks,
-    _find_jsonld_by_type,
-    _find_jsonld_items,
-    _make_slug,
-    _slug_from_url,
-    _build_hotel,
-    _build_restaurant,
-    _build_attraction,
-)
-from cli_web.tripadvisor.core.models import Hotel, Restaurant, Attraction, Location
+from cli_web.tripadvisor.core.models import Hotel, Location
 from cli_web.tripadvisor.utils.helpers import (
     format_rating,
     resolve_json_mode,
     truncate,
 )
 
-
 # ---------------------------------------------------------------------------
 # Exception hierarchy
 # ---------------------------------------------------------------------------
+
 
 class TestExceptions:
     def test_base_exception(self):
@@ -78,7 +75,14 @@ class TestExceptions:
         assert exc.to_dict()["code"] == "NETWORK_ERROR"
 
     def test_inheritance_chain(self):
-        for cls in (AuthError, RateLimitError, NetworkError, ServerError, NotFoundError, ParseError):
+        for cls in (
+            AuthError,
+            RateLimitError,
+            NetworkError,
+            ServerError,
+            NotFoundError,
+            ParseError,
+        ):
             assert issubclass(cls, TripAdvisorError)
             assert issubclass(cls, Exception)
 
@@ -86,6 +90,7 @@ class TestExceptions:
 # ---------------------------------------------------------------------------
 # Slug helpers
 # ---------------------------------------------------------------------------
+
 
 class TestSlugHelpers:
     def test_make_slug_simple(self):
@@ -117,6 +122,7 @@ class TestSlugHelpers:
 # ID extraction
 # ---------------------------------------------------------------------------
 
+
 class TestExtractId:
     def test_extract_hotel_id(self):
         url = "https://www.tripadvisor.com/Hotel_Review-g187147-d229968-Reviews-Hotel.html"
@@ -137,6 +143,7 @@ class TestExtractId:
 # ---------------------------------------------------------------------------
 # JSON-LD extraction
 # ---------------------------------------------------------------------------
+
 
 class TestJsonLDExtraction:
     HOTEL_HTML = """
@@ -229,6 +236,7 @@ class TestJsonLDExtraction:
 # Model builders
 # ---------------------------------------------------------------------------
 
+
 class TestBuildHotel:
     def test_basic_build(self):
         ld = {
@@ -273,9 +281,22 @@ class TestBuildHotel:
             "url": "https://www.tripadvisor.com/Hotel_Review-g1-d999-Reviews-T.html",
         }
         d = _build_hotel(ld).to_dict()
-        expected_keys = {"id", "name", "url", "rating", "review_count", "price_range",
-                         "address", "city", "country", "telephone", "latitude",
-                         "longitude", "image", "amenities"}
+        expected_keys = {
+            "id",
+            "name",
+            "url",
+            "rating",
+            "review_count",
+            "price_range",
+            "address",
+            "city",
+            "country",
+            "telephone",
+            "latitude",
+            "longitude",
+            "image",
+            "amenities",
+        }
         assert expected_keys == set(d.keys())
 
 
@@ -317,9 +338,22 @@ class TestBuildRestaurant:
             "url": "https://www.tripadvisor.com/Restaurant_Review-g1-d1-Reviews-T.html",
         }
         d = _build_restaurant(ld).to_dict()
-        expected_keys = {"id", "name", "url", "rating", "review_count", "price_range",
-                         "cuisines", "address", "city", "telephone", "latitude",
-                         "longitude", "image", "opening_hours"}
+        expected_keys = {
+            "id",
+            "name",
+            "url",
+            "rating",
+            "review_count",
+            "price_range",
+            "cuisines",
+            "address",
+            "city",
+            "telephone",
+            "latitude",
+            "longitude",
+            "image",
+            "opening_hours",
+        }
         assert expected_keys == set(d.keys())
 
 
@@ -348,15 +382,28 @@ class TestBuildAttraction:
             "url": "https://www.tripadvisor.com/Attraction_Review-g1-d1-Reviews-T.html",
         }
         d = _build_attraction(ld).to_dict()
-        expected_keys = {"id", "name", "url", "rating", "review_count", "address",
-                         "city", "telephone", "latitude", "longitude", "image",
-                         "opening_hours", "description"}
+        expected_keys = {
+            "id",
+            "name",
+            "url",
+            "rating",
+            "review_count",
+            "address",
+            "city",
+            "telephone",
+            "latitude",
+            "longitude",
+            "image",
+            "opening_hours",
+            "description",
+        }
         assert expected_keys == set(d.keys())
 
 
 # ---------------------------------------------------------------------------
 # Models
 # ---------------------------------------------------------------------------
+
 
 class TestModels:
     def test_location_to_dict(self):
@@ -400,6 +447,7 @@ class TestModels:
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 class TestHelpers:
     def test_truncate_short(self):

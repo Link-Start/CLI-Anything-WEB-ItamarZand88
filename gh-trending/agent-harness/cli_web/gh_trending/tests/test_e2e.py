@@ -8,12 +8,10 @@ import shutil
 import subprocess
 import sys
 
-import pytest
-
 from cli_web.gh_trending.core.client import GitHubClient
 
-
 # ─── subprocess resolver ──────────────────────────────────────────────────────
+
 
 def _resolve_cli(name: str) -> list[str]:
     """Resolve installed CLI command; falls back to python -m for dev."""
@@ -31,6 +29,7 @@ def _resolve_cli(name: str) -> list[str]:
 
 # ─── Live E2E tests ───────────────────────────────────────────────────────────
 # GitHub Trending is public — no auth required.
+
 
 class TestTrendingReposLive:
     def test_repos_today(self):
@@ -114,6 +113,7 @@ class TestTrendingDevelopersLive:
 
 
 # ─── Subprocess / installed CLI tests ────────────────────────────────────────
+
 
 class TestCLISubprocess:
     CLI_BASE = _resolve_cli("cli-web-gh-trending")

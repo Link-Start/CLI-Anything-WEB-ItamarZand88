@@ -16,7 +16,6 @@ from curl_cffi import requests as curl_requests
 from .auth import load_cookies
 from .exceptions import (
     AuthError,
-    BookingError,
     NetworkError,
     NotFoundError,
     RateLimitError,
@@ -82,8 +81,7 @@ class BookingClient:
                 status_code=resp.status_code,
             )
 
-    def _graphql(self, operation: str, query: str,
-                 variables: dict | None = None) -> dict:
+    def _graphql(self, operation: str, query: str, variables: dict | None = None) -> dict:
         """Execute a GraphQL query (no WAF cookies needed)."""
         try:
             resp = curl_requests.post(
@@ -98,14 +96,14 @@ class BookingClient:
                 timeout=15,
             )
         except Exception as e:
-            raise NetworkError(f"GraphQL request failed: {e}")
+            raise NetworkError(f"GraphQL request failed: {e}") from e
 
         self._check_status(resp, GRAPHQL_URL)
 
         try:
             data = resp.json()
-        except (json.JSONDecodeError, ValueError):
-            raise ServerError("Invalid JSON response from GraphQL endpoint")
+        except (json.JSONDecodeError, ValueError) as exc:
+            raise ServerError("Invalid JSON response from GraphQL endpoint") from exc
 
         if "errors" in data and not data.get("data"):
             errors = data["errors"]
@@ -144,7 +142,7 @@ class BookingClient:
                 timeout=20,
             )
         except Exception as e:
-            raise NetworkError(f"HTTP request failed: {e}")
+            raise NetworkError(f"HTTP request failed: {e}") from e
 
         self._check_waf(resp)
         self._check_status(resp, url)
@@ -171,9 +169,7 @@ class BookingClient:
             }
         }
         data = self._graphql("AutoComplete", AUTOCOMPLETE_QUERY, variables)
-        results = (
-            data.get("autoCompleteSuggestions", {}).get("results", [])
-        )
+        results = data.get("autoCompleteSuggestions", {}).get("results", [])
         return [Destination.from_graphql(r) for r in results]
 
     # ── Search (SSR HTML) ───────────────────────────────────────────
@@ -321,9 +317,14 @@ class BookingClient:
         for script in ld_scripts:
             try:
                 data = json.loads(script.string)
-                if data.get("@type") in ("Hotel", "LodgingBusiness",
-                                          "Apartment", "Hostel",
-                                          "BedAndBreakfast", "Resort"):
+                if data.get("@type") in (
+                    "Hotel",
+                    "LodgingBusiness",
+                    "Apartment",
+                    "Hostel",
+                    "BedAndBreakfast",
+                    "Resort",
+                ):
                     return PropertyDetail.from_json_ld(data, slug)
             except (json.JSONDecodeError, TypeError):
                 continue

@@ -28,6 +28,7 @@ _skin = ReplSkin("chatgpt", version="0.1.0")
 
 
 @click.group(invoke_without_command=True)
+@click.version_option("0.1.0", prog_name="cli-web-chatgpt")
 @click.option("--json", "json_mode", is_flag=True, help="Output as JSON.")
 @click.pass_context
 def cli(ctx, json_mode: bool) -> None:

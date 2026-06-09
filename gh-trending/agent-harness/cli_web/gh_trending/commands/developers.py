@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import click
-
 from cli_web.gh_trending.core.client import GitHubClient
 from cli_web.gh_trending.utils.helpers import handle_errors, resolve_json_mode
 from cli_web.gh_trending.utils.output import print_developers_table, print_json
@@ -15,7 +14,9 @@ def developers_group():
 
 
 @developers_group.command("list")
-@click.option("--language", "-l", default="", help="Filter by programming language (e.g. python, javascript).")
+@click.option(
+    "--language", "-l", default="", help="Filter by programming language (e.g. python, javascript)."
+)
 @click.option(
     "--since",
     "-s",

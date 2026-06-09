@@ -175,16 +175,20 @@ class HackerNewsClient:
         data = self._get_json(f"{ALGOLIA_BASE}/{endpoint}", params=params)
         results = []
         for hit in data.get("hits", []):
-            results.append(SearchResult(
-                objectID=hit.get("objectID", ""),
-                title=hit.get("title", ""),
-                url=hit.get("url"),
-                author=hit.get("author", ""),
-                points=hit.get("points"),
-                num_comments=hit.get("num_comments"),
-                created_at=hit.get("created_at", ""),
-                story_id=int(hit.get("objectID", "0")) if hit.get("objectID", "").isdigit() else None,
-            ))
+            results.append(
+                SearchResult(
+                    objectID=hit.get("objectID", ""),
+                    title=hit.get("title", ""),
+                    url=hit.get("url"),
+                    author=hit.get("author", ""),
+                    points=hit.get("points"),
+                    num_comments=hit.get("num_comments"),
+                    created_at=hit.get("created_at", ""),
+                    story_id=int(hit.get("objectID", "0"))
+                    if hit.get("objectID", "").isdigit()
+                    else None,
+                )
+            )
         return results
 
     # -------------------------------------------------------- authenticated web requests
@@ -207,13 +211,17 @@ class HackerNewsClient:
             raise NetworkError(f"Network error: {exc}") from exc
 
         if response.status_code in (401, 403):
-            raise AuthError("Auth cookie expired. Run: cli-web-hackernews auth login", recoverable=False)
+            raise AuthError(
+                "Auth cookie expired. Run: cli-web-hackernews auth login", recoverable=False
+            )
         if response.status_code >= 500:
             raise ServerError(response.status_code)
         return response
 
     def _get_html(
-        self, url: str, params: dict[str, str] | None = None,
+        self,
+        url: str,
+        params: dict[str, str] | None = None,
     ) -> str:
         """Fetch a URL with auth cookie and return HTML body."""
         response = self._web_request("GET", url, params=params)
@@ -222,11 +230,15 @@ class HackerNewsClient:
         return response.text
 
     def _post_form(
-        self, url: str, data: dict[str, str],
+        self,
+        url: str,
+        data: dict[str, str],
     ) -> str:
         """POST form data with auth cookie, return response text."""
         response = self._web_request(
-            "POST", url, data=data,
+            "POST",
+            url,
+            data=data,
             headers={"Content-Type": "application/x-www-form-urlencoded"},
         )
         return response.text
@@ -236,7 +248,7 @@ class HackerNewsClient:
 
         HN embeds auth tokens in links like: vote?id=X&how=up&auth=HEXTOKEN
         """
-        pattern = rf'auth=([a-f0-9]+).*?(?:id={item_id}|{item_id})'
+        pattern = rf"auth=([a-f0-9]+).*?(?:id={item_id}|{item_id})"
         match = re.search(pattern, html)
         if match:
             return match.group(1)
@@ -256,7 +268,7 @@ class HackerNewsClient:
         auth_token = self._extract_auth_token(html, item_id)
 
         # Execute the upvote via GET
-        result_html = self._get_html(
+        self._get_html(
             f"{HN_BASE}/vote",
             params={"id": str(item_id), "how": "up", "auth": auth_token},
         )
@@ -359,7 +371,6 @@ class HackerNewsClient:
 
     def _parse_stories_from_html(self, html: str, limit: int = 30) -> list[Story]:
         """Parse story items from HN HTML pages (favorites, submitted, etc.)."""
-        stories: list[Story] = []
         # Find all story IDs from the HTML
         id_matches = re.findall(r'class="athing[^"]*"\s+id="(\d+)"', html)
         if not id_matches:
@@ -386,16 +397,14 @@ class HackerNewsClient:
 
     def _fetch_items_parallel(self, ids: list[int], model_cls: type) -> list:
         """Fetch multiple items in parallel using asyncio + httpx."""
+
         async def _fetch_all():
             async with httpx.AsyncClient(
                 headers=DEFAULT_HEADERS,
                 follow_redirects=True,
                 timeout=self._timeout,
             ) as client:
-                tasks = [
-                    client.get(f"{FIREBASE_BASE}/item/{item_id}.json")
-                    for item_id in ids
-                ]
+                tasks = [client.get(f"{FIREBASE_BASE}/item/{item_id}.json") for item_id in ids]
                 responses = await asyncio.gather(*tasks, return_exceptions=True)
 
             items = []
@@ -409,28 +418,32 @@ class HackerNewsClient:
                     continue
                 try:
                     if model_cls == Story:
-                        items.append(Story(
-                            id=data.get("id", 0),
-                            title=data.get("title", ""),
-                            url=data.get("url"),
-                            score=data.get("score", 0),
-                            by=data.get("by", ""),
-                            time=data.get("time", 0),
-                            descendants=data.get("descendants", 0),
-                            type=data.get("type", "story"),
-                        ))
+                        items.append(
+                            Story(
+                                id=data.get("id", 0),
+                                title=data.get("title", ""),
+                                url=data.get("url"),
+                                score=data.get("score", 0),
+                                by=data.get("by", ""),
+                                time=data.get("time", 0),
+                                descendants=data.get("descendants", 0),
+                                type=data.get("type", "story"),
+                            )
+                        )
                     elif model_cls == Comment:
-                        items.append(Comment(
-                            id=data.get("id", 0),
-                            by=data.get("by", ""),
-                            text=data.get("text", ""),
-                            time=data.get("time", 0),
-                            parent=data.get("parent", 0),
-                            kids=data.get("kids", []),
-                            dead=data.get("dead", False),
-                            deleted=data.get("deleted", False),
-                            type=data.get("type", "comment"),
-                        ))
+                        items.append(
+                            Comment(
+                                id=data.get("id", 0),
+                                by=data.get("by", ""),
+                                text=data.get("text", ""),
+                                time=data.get("time", 0),
+                                parent=data.get("parent", 0),
+                                kids=data.get("kids", []),
+                                dead=data.get("dead", False),
+                                deleted=data.get("deleted", False),
+                                type=data.get("type", "comment"),
+                            )
+                        )
                 except (KeyError, TypeError):
                     continue
             return items
@@ -449,28 +462,32 @@ class HackerNewsClient:
                     if data.get("deleted"):
                         continue
                     if model_cls == Story:
-                        items.append(Story(
-                            id=data.get("id", 0),
-                            title=data.get("title", ""),
-                            url=data.get("url"),
-                            score=data.get("score", 0),
-                            by=data.get("by", ""),
-                            time=data.get("time", 0),
-                            descendants=data.get("descendants", 0),
-                            type=data.get("type", "story"),
-                        ))
+                        items.append(
+                            Story(
+                                id=data.get("id", 0),
+                                title=data.get("title", ""),
+                                url=data.get("url"),
+                                score=data.get("score", 0),
+                                by=data.get("by", ""),
+                                time=data.get("time", 0),
+                                descendants=data.get("descendants", 0),
+                                type=data.get("type", "story"),
+                            )
+                        )
                     elif model_cls == Comment:
-                        items.append(Comment(
-                            id=data.get("id", 0),
-                            by=data.get("by", ""),
-                            text=data.get("text", ""),
-                            time=data.get("time", 0),
-                            parent=data.get("parent", 0),
-                            kids=data.get("kids", []),
-                            dead=data.get("dead", False),
-                            deleted=data.get("deleted", False),
-                            type=data.get("type", "comment"),
-                        ))
+                        items.append(
+                            Comment(
+                                id=data.get("id", 0),
+                                by=data.get("by", ""),
+                                text=data.get("text", ""),
+                                time=data.get("time", 0),
+                                parent=data.get("parent", 0),
+                                kids=data.get("kids", []),
+                                dead=data.get("dead", False),
+                                deleted=data.get("deleted", False),
+                                type=data.get("type", "comment"),
+                            )
+                        )
                 except Exception:
                     continue
             return items

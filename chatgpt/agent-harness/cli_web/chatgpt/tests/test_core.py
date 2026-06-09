@@ -3,12 +3,9 @@
 from __future__ import annotations
 
 import json
-import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import click
 import pytest
-
 from cli_web.chatgpt.core.exceptions import (
     AuthError,
     ChatGPTError,
@@ -17,8 +14,7 @@ from cli_web.chatgpt.core.exceptions import (
     RateLimitError,
     ServerError,
 )
-from cli_web.chatgpt.utils.helpers import handle_errors, json_error, print_json, truncate
-
+from cli_web.chatgpt.utils.helpers import handle_errors, json_error, truncate
 
 # ── Exception hierarchy tests ──────────────────────────────────
 
@@ -265,5 +261,3 @@ class TestAuth:
 
         clear_auth()
         assert not auth_file.exists()
-
-

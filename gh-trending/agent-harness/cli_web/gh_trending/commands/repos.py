@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import click
-
 from cli_web.gh_trending.core.client import GitHubClient
 from cli_web.gh_trending.utils.helpers import handle_errors, resolve_json_mode
 from cli_web.gh_trending.utils.output import print_json, print_repos_table
@@ -15,7 +14,9 @@ def repos_group():
 
 
 @repos_group.command("list")
-@click.option("--language", "-l", default="", help="Filter by programming language (e.g. python, javascript).")
+@click.option(
+    "--language", "-l", default="", help="Filter by programming language (e.g. python, javascript)."
+)
 @click.option(
     "--since",
     "-s",
@@ -24,7 +25,12 @@ def repos_group():
     show_default=True,
     help="Time range for trending.",
 )
-@click.option("--spoken-language", "-L", default="", help="Filter by spoken language (ISO 639-1 code, e.g. zh, en).")
+@click.option(
+    "--spoken-language",
+    "-L",
+    default="",
+    help="Filter by spoken language (ISO 639-1 code, e.g. zh, en).",
+)
 @click.option("--json", "json_mode", is_flag=True, help="Output as JSON.")
 @click.pass_context
 def repos_list(ctx, language, since, spoken_language, json_mode):

@@ -44,14 +44,14 @@ def load_cookies() -> dict[str, str]:
                 cookies = data
             else:
                 raise AuthError("Invalid auth JSON format in env var", recoverable=False)
-        except json.JSONDecodeError:
-            raise AuthError("Invalid JSON in CLI_WEB_BOOKING_AUTH_JSON", recoverable=False)
+        except json.JSONDecodeError as exc:
+            raise AuthError("Invalid JSON in CLI_WEB_BOOKING_AUTH_JSON", recoverable=False) from exc
     elif AUTH_FILE.exists():
         try:
             data = json.loads(AUTH_FILE.read_text(encoding="utf-8"))
             cookies = data.get("cookies", {})
         except (json.JSONDecodeError, OSError) as e:
-            raise AuthError(f"Failed to read auth file: {e}", recoverable=False)
+            raise AuthError(f"Failed to read auth file: {e}", recoverable=False) from e
     else:
         raise AuthError(
             "No WAF cookies found. Run: cli-web-booking auth login",
@@ -153,13 +153,13 @@ def login_browser() -> dict[str, str]:
     """
     try:
         from playwright.sync_api import sync_playwright
-    except ImportError:
+    except ImportError as exc:
         raise AuthError(
             "Playwright not installed. Run:\n"
             "  pip install playwright\n"
             "  playwright install chromium",
             recoverable=False,
-        )
+        ) from exc
 
     _ensure_config_dir()
     state_file = CONFIG_DIR / "state.json"
@@ -186,9 +186,9 @@ def login_browser() -> dict[str, str]:
         print("Wait for the Booking.com homepage to load fully.")
         try:
             input("\nPress ENTER when the page has loaded... ")
-        except (EOFError, KeyboardInterrupt):
+        except (EOFError, KeyboardInterrupt) as exc:
             context.close()
-            raise AuthError("Login cancelled", recoverable=False)
+            raise AuthError("Login cancelled", recoverable=False) from exc
 
         # Save storage state
         context.storage_state(path=str(state_file))
@@ -198,7 +198,7 @@ def login_browser() -> dict[str, str]:
     try:
         state = json.loads(state_file.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError) as e:
-        raise AuthError(f"Failed to parse state file: {e}", recoverable=False)
+        raise AuthError(f"Failed to parse state file: {e}", recoverable=False) from e
 
     raw_cookies = state.get("cookies", [])
     if isinstance(raw_cookies, list):

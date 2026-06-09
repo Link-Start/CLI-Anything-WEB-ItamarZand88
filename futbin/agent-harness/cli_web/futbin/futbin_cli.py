@@ -9,6 +9,7 @@ Usage:
     cli-web-futbin sbc list
     cli-web-futbin evolutions list
 """
+
 import sys
 
 # Force UTF-8 output on Windows to handle Unicode player names (ć, é, ö, etc.)
@@ -24,12 +25,11 @@ if sys.stderr.encoding and sys.stderr.encoding.lower() not in ("utf-8", "utf8"):
         pass
 
 import click
-
-from cli_web.futbin.commands.players import players
-from cli_web.futbin.commands.market import market
-from cli_web.futbin.commands.sbc import sbc
-from cli_web.futbin.commands.evolutions import evolutions
 from cli_web.futbin.commands.config_cmd import config
+from cli_web.futbin.commands.evolutions import evolutions
+from cli_web.futbin.commands.market import market
+from cli_web.futbin.commands.players import players
+from cli_web.futbin.commands.sbc import sbc
 from cli_web.futbin.utils.repl_skin import ReplSkin
 
 VERSION = "0.1.0"
@@ -75,6 +75,7 @@ def _run_repl():
 
         # Parse and dispatch
         import shlex
+
         args = shlex.split(line)
         try:
             cli.main(args, standalone_mode=False, prog_name="cli-web-futbin")

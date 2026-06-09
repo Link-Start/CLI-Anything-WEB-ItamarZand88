@@ -13,7 +13,7 @@ import shlex
 
 import click
 
-from .commands.search import search_group, close_client
+from .commands.search import close_client, search_group
 from .utils.repl_skin import ReplSkin
 
 _skin = ReplSkin(app="gai", version="0.1.0")

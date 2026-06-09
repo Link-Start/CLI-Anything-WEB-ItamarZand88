@@ -12,12 +12,11 @@ for _stream in (sys.stdout, sys.stderr):
 import shlex
 
 import click
-
 from cli_web.pexels import __version__
-from cli_web.pexels.commands.photos import photos
-from cli_web.pexels.commands.videos import videos
-from cli_web.pexels.commands.users import users
 from cli_web.pexels.commands.collections import collections
+from cli_web.pexels.commands.photos import photos
+from cli_web.pexels.commands.users import users
+from cli_web.pexels.commands.videos import videos
 from cli_web.pexels.core.exceptions import PexelsError
 from cli_web.pexels.utils.repl_skin import ReplSkin
 

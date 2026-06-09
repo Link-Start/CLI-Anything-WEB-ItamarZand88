@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
-
 from cli_web.hackernews.core.client import HackerNewsClient
 from cli_web.hackernews.core.exceptions import (
     AppError,
@@ -17,7 +16,6 @@ from cli_web.hackernews.core.exceptions import (
     ServerError,
 )
 from cli_web.hackernews.core.models import Comment, SearchResult, Story, User
-
 
 # ─── Model tests ─────────────────────────────────────────────────────────────
 
@@ -106,9 +104,7 @@ class TestClientHTTPErrors:
     def test_rate_limit_raises(self):
         client = HackerNewsClient()
         client._client = MagicMock()
-        client._client.get.return_value = self._mock_response(
-            429, headers={"retry-after": "30"}
-        )
+        client._client.get.return_value = self._mock_response(429, headers={"retry-after": "30"})
         with pytest.raises(RateLimitError) as exc_info:
             client._get_json("https://hacker-news.firebaseio.com/v0/topstories.json")
         assert exc_info.value.retry_after == 30
@@ -275,16 +271,20 @@ class TestAuthModule:
             client._extract_auth_token(html, 99999)
 
     def test_parse_stories_from_html_extracts_ids(self):
-        html = '''
+        html = """
         <tr class="athing submission" id="12345"><td></td></tr>
         <tr class="athing submission" id="67890"><td></td></tr>
-        '''
+        """
         client = HackerNewsClient(user_cookie="test")
         # Mock _fetch_items_parallel to return stories based on IDs
-        with patch.object(client, "_fetch_items_parallel", return_value=[
-            Story(id=12345, title="Story 1"),
-            Story(id=67890, title="Story 2"),
-        ]):
+        with patch.object(
+            client,
+            "_fetch_items_parallel",
+            return_value=[
+                Story(id=12345, title="Story 1"),
+                Story(id=67890, title="Story 2"),
+            ],
+        ):
             stories = client._parse_stories_from_html(html)
             assert len(stories) == 2
 

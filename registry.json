@@ -99,9 +99,12 @@
       "directory": "booking/agent-harness",
       "namespace": "cli_web.booking",
       "commands": [
-        "search find",
-        "property get",
-        "destinations resolve"
+        "search",
+        "get",
+        "autocomplete",
+        "auth login",
+        "auth status",
+        "auth logout"
       ],
       "install": "pip install -e booking/agent-harness"
     },

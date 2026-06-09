@@ -13,7 +13,7 @@ from typing import Any
 
 from curl_cffi import requests as curl_requests
 
-from .auth import load_auth, CONFIG_DIR
+from .auth import load_auth
 from .exceptions import (
     AuthError,
     ChatGPTError,
@@ -84,9 +84,7 @@ class ChatGPTClient:
                 retry_after=float(retry) if retry else None,
             )
         if resp.status_code >= 500:
-            raise ServerError(
-                f"Server error {resp.status_code}", status_code=resp.status_code
-            )
+            raise ServerError(f"Server error {resp.status_code}", status_code=resp.status_code)
         if resp.status_code >= 400:
             raise ChatGPTError(f"HTTP {resp.status_code}: {resp.text[:300]}")
 
@@ -192,8 +190,10 @@ class ChatGPTClient:
                     if "chatgpt.com" not in c.get("domain", ""):
                         continue
                     cookie: dict = {
-                        "name": c["name"], "value": c["value"],
-                        "domain": c["domain"], "path": c.get("path", "/"),
+                        "name": c["name"],
+                        "value": c["value"],
+                        "domain": c["domain"],
+                        "path": c.get("path", "/"),
                     }
                     if c.get("expires", -1) > 0:
                         cookie["expires"] = c["expires"]
@@ -219,14 +219,15 @@ class ChatGPTClient:
         """
         if sys.platform == "win32":
             import asyncio
+
             asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
 
         try:
             from camoufox.sync_api import Camoufox
-        except ImportError:
+        except ImportError as exc:
             raise NetworkError(
                 "camoufox required for chat. Run: pip install camoufox && python -m camoufox fetch"
-            )
+            ) from exc
 
         cookies = self._load_browser_cookies()
 

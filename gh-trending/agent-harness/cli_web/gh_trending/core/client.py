@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import re
-import time
 from typing import Any
 
 import httpx
@@ -92,8 +90,7 @@ class GitHubClient:
             if no_results:
                 return []
             raise ParseError(
-                "Could not find trending repos on page. "
-                "GitHub may have changed its HTML structure."
+                "Could not find trending repos on page. GitHub may have changed its HTML structure."
             )
 
         repos: list[TrendingRepo] = []
@@ -139,8 +136,7 @@ class GitHubClient:
 
             # Contributors (built by)
             contributors = [
-                img.get("alt", "").lstrip("@")
-                for img in article.select(".Link--muted img[alt]")
+                img.get("alt", "").lstrip("@") for img in article.select(".Link--muted img[alt]")
             ]
 
             return TrendingRepo(

@@ -13,7 +13,6 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
 import shlex
 
 import click
-
 from cli_web.gh_trending.commands.developers import developers_group
 from cli_web.gh_trending.commands.repos import repos_group
 from cli_web.gh_trending.core.exceptions import AppError

@@ -9,6 +9,7 @@ Usage:
     python validate-checklist.py <harness-dir> --app-name hackernews --auth-type none
     python validate-checklist.py <harness-dir> --app-name hackernews --json
 """
+
 from __future__ import annotations
 
 import argparse
@@ -18,10 +19,10 @@ import re
 import sys
 from pathlib import Path
 
-
 # ---------------------------------------------------------------------------
 # Result tracking
 # ---------------------------------------------------------------------------
+
 
 class CheckResult:
     def __init__(self, category: str, check_id: str, description: str):
@@ -272,7 +273,11 @@ class Validator:
             r.fail(f"Only mapped: {mapped}")
 
         r = self.check(cat, "4.4", "Auth retry on 401/403")
-        if "retry_on_auth" in client_content or ("401" in client_content and "retry" in client_content.lower()) or "_attempt" in client_content:
+        if (
+            "retry_on_auth" in client_content
+            or ("401" in client_content and "retry" in client_content.lower())
+            or "_attempt" in client_content
+        ):
             r.pass_()
         elif not self.has_auth:
             r.na("No auth")
@@ -286,8 +291,11 @@ class Validator:
             auth_path = self.pkg_dir / "core" / "auth.py"
             auth_content = auth_path.read_text(encoding="utf-8") if auth_path.exists() else ""
             has_refresh_fn = "refresh_auth" in auth_content or "refresh_token" in auth_content
-            has_headless = "headless" in auth_content
-            has_client_call = "refresh_auth" in client_content or "refresh_token" in client_content or "_refresh_via_browser" in client_content
+            has_client_call = (
+                "refresh_auth" in client_content
+                or "refresh_token" in client_content
+                or "_refresh_via_browser" in client_content
+            )
             if has_refresh_fn and has_client_call:
                 r.pass_("auth.py has refresh + client calls it on 401/403")
             else:
@@ -402,7 +410,9 @@ class Validator:
             r.fail()
 
         r = self.check(cat, "7.3", "Entry point format correct")
-        expected = f"cli-web-{self.app_name}=cli_web.{self.app_underscore}.{self.app_underscore}_cli:main"
+        expected = (
+            f"cli-web-{self.app_name}=cli_web.{self.app_underscore}.{self.app_underscore}_cli:main"
+        )
         if expected in setup_content:
             r.pass_()
         else:
@@ -598,7 +608,7 @@ class Validator:
         total = len(self.results)
         applicable = total - counts["na"] - counts["skip"]
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"  Total checks:  {total}")
         print(f"  \033[32mPassed:      {counts['pass']}\033[0m")
         print(f"  \033[31mFailed:      {counts['fail']}\033[0m")
@@ -607,7 +617,7 @@ class Validator:
         if applicable > 0:
             rate = counts["pass"] / applicable * 100
             print(f"  Pass rate:     {rate:.0f}% ({counts['pass']}/{applicable})")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
         return counts["fail"]
 
@@ -615,27 +625,37 @@ class Validator:
         counts = {"pass": 0, "fail": 0, "skip": 0, "na": 0}
         for r in self.results:
             counts[r.status] += 1
-        return json.dumps({
-            "app_name": self.app_name,
-            "auth_type": self.auth_type,
-            "summary": counts,
-            "checks": [r.to_dict() for r in self.results],
-        }, indent=2)
+        return json.dumps(
+            {
+                "app_name": self.app_name,
+                "auth_type": self.auth_type,
+                "summary": counts,
+                "checks": [r.to_dict() for r in self.results],
+            },
+            indent=2,
+        )
 
 
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Validate cli-web-* CLI against quality checklist.")
+    parser = argparse.ArgumentParser(
+        description="Validate cli-web-* CLI against quality checklist."
+    )
     parser.add_argument("harness_dir", type=Path, help="Path to agent-harness directory")
     parser.add_argument("--app-name", required=True, help="CLI app name (e.g., hackernews)")
-    parser.add_argument("--auth-type", default="cookie",
-                        choices=["none", "cookie", "api-key", "google-sso"],
-                        help="Auth type (default: cookie)")
-    parser.add_argument("--json", dest="json_mode", action="store_true",
-                        help="Output results as JSON")
+    parser.add_argument(
+        "--auth-type",
+        default="cookie",
+        choices=["none", "cookie", "api-key", "google-sso"],
+        help="Auth type (default: cookie)",
+    )
+    parser.add_argument(
+        "--json", dest="json_mode", action="store_true", help="Output results as JSON"
+    )
 
     args = parser.parse_args()
 

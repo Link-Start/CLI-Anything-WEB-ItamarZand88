@@ -1,4 +1,5 @@
 """cli-web-capitoltrades — CLI entry point."""
+
 from __future__ import annotations
 
 import sys
@@ -68,7 +69,9 @@ def _print_repl_help() -> None:
     print("  trades by-ticker <SYM>            Find trades for a ticker (e.g. NVDA, AMGN)")
     print("  trades stats                      Overview stats (total trades, volume, etc.)")
     print()
-    print("  politicians list [--page N] [--party republican|democrat|independent] [--chamber house|senate] [--state ST]")
+    print(
+        "  politicians list [--page N] [--party republican|democrat|independent] [--chamber house|senate] [--state ST]"
+    )
     print("  politicians top [--by trades|volume] [--page-size N] [--party ...] [--chamber ...]")
     print("  politicians get <bioguide_id>     Show a single politician (e.g. Y000067)")
     print()

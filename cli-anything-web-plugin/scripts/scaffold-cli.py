@@ -20,6 +20,7 @@ Output:
     Creates <output-dir>/cli_web/<app>/ with full boilerplate structure,
     plus <output-dir>/setup.py.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -43,6 +44,7 @@ TEMPLATES_DIR = get_templates_dir()
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def to_pascal(name: str) -> str:
     """Convert app-name or app_name to PascalCase.
@@ -133,17 +135,22 @@ def write_file(path: Path, content: str) -> None:
 # Client variant selection
 # ---------------------------------------------------------------------------
 
+
 def build_client(variables: dict, protocol: str, http_client: str) -> str:
     """Render client.py from a base template + conditional method injection."""
     valid_protocols = ("rest", "graphql", "html-scraping", "batchexecute")
     if protocol not in valid_protocols:
-        raise ValueError(f"Unknown protocol '{protocol}'. Must be one of: {', '.join(valid_protocols)}")
+        raise ValueError(
+            f"Unknown protocol '{protocol}'. Must be one of: {', '.join(valid_protocols)}"
+        )
 
     if protocol == "batchexecute":
         return render_template(TEMPLATES_DIR / "client_batchexecute.py.tpl", variables)
 
     # REST-based protocols: select base by http_client, then inject extra methods
-    base_tpl = "client_rest_curl.py.tpl" if http_client == "curl_cffi" else "client_rest_httpx.py.tpl"
+    base_tpl = (
+        "client_rest_curl.py.tpl" if http_client == "curl_cffi" else "client_rest_httpx.py.tpl"
+    )
     content = render_template(TEMPLATES_DIR / base_tpl, variables)
 
     # Inject protocol-specific helper methods before the close() method
@@ -207,7 +214,9 @@ _HELPER_FRAGMENTS = [
 ]
 
 
-def build_helpers(variables: dict, has_polling: bool, has_context: bool, has_partial_ids: bool) -> str:
+def build_helpers(
+    variables: dict, has_polling: bool, has_context: bool, has_partial_ids: bool
+) -> str:
     """Render helpers.py by composing the base template with feature fragments."""
     flags = {
         "has_partial_ids": has_partial_ids,
@@ -224,6 +233,7 @@ def build_helpers(variables: dict, has_polling: bool, has_context: bool, has_par
 # ---------------------------------------------------------------------------
 # Setup.py generation
 # ---------------------------------------------------------------------------
+
 
 def build_setup_py(variables: dict, http_client: str, auth_type: str, protocol: str) -> str:
     """Render setup.py with correct dependencies."""
@@ -262,6 +272,7 @@ def build_setup_py(variables: dict, http_client: str, auth_type: str, protocol: 
 # ---------------------------------------------------------------------------
 # Main scaffold
 # ---------------------------------------------------------------------------
+
 
 def scaffold(
     output_dir: Path,
@@ -408,21 +419,22 @@ def scaffold(
     # ── Summary ────────────────────────────────────────────────────────────
     total = sum(1 for _ in output_dir.rglob("*.py"))
     print(f"\nDone! Generated {total} Python files.")
-    print(f"\nNext steps:")
-    print(f"  1. Fill in FILL_IN_BASE_URL in core/client.py")
-    print(f"  2. Add endpoint methods to core/client.py")
-    print(f"  3. Create command modules in commands/")
+    print("\nNext steps:")
+    print("  1. Fill in FILL_IN_BASE_URL in core/client.py")
+    print("  2. Add endpoint methods to core/client.py")
+    print("  3. Create command modules in commands/")
     print(f"  4. Register commands in {app_underscore}_cli.py")
-    print(f"  5. Fill in REPL help text")
+    print("  5. Fill in REPL help text")
     if auth_type != "none":
-        print(f"  6. Implement login flow in core/auth.py")
+        print("  6. Implement login flow in core/auth.py")
     if protocol == "batchexecute":
-        print(f"  7. Add RPC method IDs to core/rpc/types.py")
+        print("  7. Add RPC method IDs to core/rpc/types.py")
 
 
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -447,8 +459,12 @@ Examples:
     --has-context --has-polling
         """,
     )
-    parser.add_argument("output_dir", type=Path, help="Output directory (e.g., <app>/agent-harness)")
-    parser.add_argument("--app-name", required=True, help="CLI app name (e.g., hackernews, gh-trending)")
+    parser.add_argument(
+        "output_dir", type=Path, help="Output directory (e.g., <app>/agent-harness)"
+    )
+    parser.add_argument(
+        "--app-name", required=True, help="CLI app name (e.g., hackernews, gh-trending)"
+    )
     parser.add_argument(
         "--protocol",
         required=True,
@@ -472,9 +488,15 @@ Examples:
         required=True,
         help="Comma-separated resource names (e.g., stories,users,search)",
     )
-    parser.add_argument("--has-polling", action="store_true", help="Include polling/backoff helpers")
-    parser.add_argument("--has-context", action="store_true", help="Include persistent context helpers")
-    parser.add_argument("--has-partial-ids", action="store_true", help="Include partial ID resolution")
+    parser.add_argument(
+        "--has-polling", action="store_true", help="Include polling/backoff helpers"
+    )
+    parser.add_argument(
+        "--has-context", action="store_true", help="Include persistent context helpers"
+    )
+    parser.add_argument(
+        "--has-partial-ids", action="store_true", help="Include partial ID resolution"
+    )
 
     args = parser.parse_args()
 

@@ -15,7 +15,6 @@ for _stream in (sys.stdout, sys.stderr):
 import shlex
 
 import click
-
 from cli_web.youtube import __version__
 from cli_web.youtube.commands.channel import channel_group
 from cli_web.youtube.commands.search import search_group
