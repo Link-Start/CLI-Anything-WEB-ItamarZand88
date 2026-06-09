@@ -65,6 +65,18 @@ cli_web/                    # Namespace package (NO __init__.py)
 
 Key files alongside: `setup.py`, `<APP>.md` (API map), `README.md`, `TEST.md`
 
+## Shared Files (single source of truth)
+
+Some per-CLI files are byte-identical and app-agnostic, so they are generated
+from ONE canonical source rather than hand-edited per CLI. Each CLI still ships
+a physical copy (so it runs standalone), but the copies must never diverge.
+
+- **`utils/repl_skin.py`** — canonical at `cli-anything-web-plugin/scripts/repl_skin.py`.
+  It is fully parameterised via `ReplSkin(app=..., display_name=...)`; per-app
+  accent colors live in `_ACCENT_COLORS`. **Never edit a CLI's copy directly** —
+  edit the canonical, then run `python scripts/sync-shared.py` to propagate.
+- `python scripts/sync-shared.py --check` (run in CI) fails if any copy drifts.
+
 ## Running Tests
 
 ```bash

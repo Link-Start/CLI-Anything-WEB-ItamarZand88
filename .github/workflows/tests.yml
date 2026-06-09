@@ -25,6 +25,8 @@ jobs:
           python-version: "3.12"
       - name: Check registry / directory / docs are in sync
         run: python scripts/check-registry-sync.py
+      - name: Check shared files (repl_skin) are in sync across CLIs
+        run: python scripts/sync-shared.py --check
 
   test:
     runs-on: ubuntu-latest

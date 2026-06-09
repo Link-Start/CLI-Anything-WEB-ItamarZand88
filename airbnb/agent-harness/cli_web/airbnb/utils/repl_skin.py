@@ -1,4 +1,22 @@
-"""REPL skin for cli-web-airbnb — terminal styling and prompt utilities."""
+"""cli-web REPL Skin — Unified terminal interface for all cli-web-* CLIs.
+
+Copy this file into your CLI package at:
+    cli_web/<app>/utils/repl_skin.py
+
+Usage:
+    from cli_web.<app>.utils.repl_skin import ReplSkin
+
+    skin = ReplSkin("monday", version="1.0.0")
+    skin.print_banner()
+    prompt_text = skin.prompt(context="Board: Sprint 42")
+    skin.success("Items created")
+    skin.error("Auth token expired")
+    skin.warning("Rate limit approaching")
+    skin.info("Fetching 24 items...")
+    skin.status("Workspace", "my-team")
+    skin.table(headers, rows)
+    skin.print_goodbye()
+"""
 
 import os
 import sys
@@ -31,6 +49,7 @@ _ACCENT_COLORS = {
     "airtable":  "\033[38;5;35m",    # green (Airtable brand)
     "asana":     "\033[38;5;196m",   # red (Asana brand)
     "trello":    "\033[38;5;39m",    # blue (Trello brand)
+    "amazon":    "\033[38;5;214m",   # Amazon orange (#FF9900)
 }
 _DEFAULT_ACCENT = "\033[38;5;75m"      # default sky blue
 
@@ -80,7 +99,8 @@ class ReplSkin:
     """
 
     def __init__(self, app: str, version: str = "1.0.0",
-                 history_file: str | None = None):
+                 history_file: str | None = None,
+                 display_name: str | None = None):
         """Initialize the REPL skin.
 
         Args:
@@ -88,9 +108,10 @@ class ReplSkin:
             version: CLI version string.
             history_file: Path for persistent command history.
                          Defaults to ~/.cli-web-<app>/history
+            display_name: Override for the banner display name.
         """
         self.app = app.lower().replace("-", "_")
-        self.display_name = app.replace("_", " ").title()
+        self.display_name = display_name or app.replace("_", " ").title()
         self.version = version
         self.accent = _ACCENT_COLORS.get(self.app, _DEFAULT_ACCENT)
 

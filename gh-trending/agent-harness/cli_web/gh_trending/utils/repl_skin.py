@@ -49,6 +49,7 @@ _ACCENT_COLORS = {
     "airtable":  "\033[38;5;35m",    # green (Airtable brand)
     "asana":     "\033[38;5;196m",   # red (Asana brand)
     "trello":    "\033[38;5;39m",    # blue (Trello brand)
+    "amazon":    "\033[38;5;214m",   # Amazon orange (#FF9900)
 }
 _DEFAULT_ACCENT = "\033[38;5;75m"      # default sky blue
 
@@ -385,7 +386,9 @@ class ReplSkin:
                 enable_history_search=True,
             )
             return session
-        except ImportError:
+        except (ImportError, Exception):
+            # Catches NoConsoleScreenBufferError on Windows xterm/Cygwin,
+            # and any other prompt_toolkit init failure — fall back to input()
             return None
 
     def get_input(self, pt_session, project_name: str = "",
