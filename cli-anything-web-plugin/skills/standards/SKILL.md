@@ -60,6 +60,11 @@ Pass each agent: APP_PATH=`{app}/agent-harness`, APP_NAME=`{app}`, and site
 profile (auth_type, is_read_only). The agents are defined in the plugin's
 `agents/` directory.
 
+A fourth agent, `cross-cli-consistency-checker`, compares the CLI against the
+others in the repo. Its shared-file checks (repl_skin / exceptions parity) are
+now enforced mechanically by `scripts/sync-shared.py --check` (see Step 2), so
+only dispatch it when you need a broader cross-CLI convention review.
+
 | Agent | Focus | What it reads | What it catches |
 |-------|-------|---------------|-----------------|
 | Traffic Fidelity | API coverage | `<APP>.md` + `client.py` + `commands/` | Missing endpoints, wrong params, broken response parsing, dead client methods, stale API map |
@@ -94,6 +99,17 @@ python ${CLAUDE_PLUGIN_ROOT}/scripts/validate-checklist.py \
 This checks ~65 of the 75 items automatically (directory structure, required files,
 CLI patterns, packaging, code quality, REPL, error handling). Fix any FAIL results
 before proceeding.
+
+Also confirm the shared, single-source files (`utils/repl_skin.py`,
+`core/exceptions.py`) match their canonical sources — never hand-edit a CLI's
+copy:
+
+```bash
+python scripts/sync-shared.py --check   # fails if any synced file has drifted
+```
+
+If it reports drift, run `python scripts/sync-shared.py` to re-propagate from
+the canonical (and edit the canonical, not the copy).
 
 For the remaining ~10 judgment-based checks (documentation quality, error message
 guidance, fixture realism), review manually per `references/quality-checklist.md`.
