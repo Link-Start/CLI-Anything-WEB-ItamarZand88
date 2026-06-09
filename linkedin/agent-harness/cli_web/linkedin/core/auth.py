@@ -25,10 +25,36 @@ ENV_VAR = "CLI_WEB_LINKEDIN_AUTH_JSON"
 _REQUIRED_COOKIES = ("li_at",)
 _IMPORTANT_COOKIES = ("li_at", "JSESSIONID", "li_rm", "liap")
 
+# Apex domain — its cookies win over subdomain duplicates on name collision.
+APEX_DOMAIN = ".linkedin.com"
+
 
 def _ensure_dir() -> None:
     """Ensure config directory exists."""
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _collect_cookies(raw_cookies: list) -> dict:
+    """Collect linkedin.com cookies into a ``{name: value}`` dict.
+
+    On a name collision across subdomains (e.g. ``www.linkedin.com`` vs the
+    apex ``.linkedin.com``) the apex value wins, so the result no longer
+    depends on arbitrary iteration order — important for cookies like
+    ``JSESSIONID`` that the CSRF token is derived from.
+    """
+    cookie_dict: dict[str, str] = {}
+    domains: dict[str, str] = {}
+    for c in raw_cookies:
+        if not isinstance(c, dict):
+            continue
+        name = c.get("name")
+        domain = c.get("domain", "")
+        if not name or ".linkedin.com" not in domain:
+            continue
+        if name not in cookie_dict or domain == APEX_DOMAIN:
+            cookie_dict[name] = c.get("value", "")
+            domains[name] = domain
+    return cookie_dict
 
 
 def save_auth(data: dict) -> Path:
@@ -77,10 +103,7 @@ def load_auth() -> dict:
                 return data
             # Handle raw cookie list format from playwright
             if isinstance(data, list):
-                cookie_dict = {}
-                for c in data:
-                    if isinstance(c, dict) and ".linkedin.com" in c.get("domain", ""):
-                        cookie_dict[c["name"]] = c["value"]
+                cookie_dict = _collect_cookies(data)
                 csrf = _derive_csrf(cookie_dict)
                 return {"cookies": cookie_dict, "csrf_token": csrf}
             # Plain dict without 'cookies' wrapper — treat as raw cookie dict
@@ -193,12 +216,7 @@ def refresh_auth() -> dict | None:
             page.goto("https://www.linkedin.com/feed/", wait_until="domcontentloaded")
             page.wait_for_timeout(3000)
 
-            cookies = context.cookies()
-            cookie_dict = {}
-
-            for c in cookies:
-                if ".linkedin.com" in c.get("domain", ""):
-                    cookie_dict[c["name"]] = c["value"]
+            cookie_dict = _collect_cookies(context.cookies())
 
             context.close()
 
@@ -254,12 +272,7 @@ def login_browser() -> dict:
         page.wait_for_timeout(2000)
 
         # Extract all cookies from .linkedin.com domain
-        cookies = context.cookies()
-        cookie_dict = {}
-
-        for c in cookies:
-            if ".linkedin.com" in c.get("domain", ""):
-                cookie_dict[c["name"]] = c["value"]
+        cookie_dict = _collect_cookies(context.cookies())
 
         context.close()
 

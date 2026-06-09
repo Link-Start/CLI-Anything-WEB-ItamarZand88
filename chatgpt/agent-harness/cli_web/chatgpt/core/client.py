@@ -8,12 +8,11 @@ Hybrid approach:
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 from typing import Any
 
 from curl_cffi import requests as curl_requests
 
-from .auth import load_auth, CONFIG_DIR
+from .auth import load_auth
 from .exceptions import (
     AuthError,
     ChatGPTError,
@@ -178,32 +177,27 @@ class ChatGPTClient:
         return resp.content
 
     def _load_browser_cookies(self) -> list[dict]:
-        """Load ChatGPT cookies from captured auth state for browser injection."""
-        import json as _json
+        """Build playwright cookie objects from stored auth for browser injection.
 
-        project_root = Path(__file__).resolve().parents[4]
-        for name in ("fresh-auth.json", "chatgpt-auth.json"):
-            path = project_root / "traffic-capture" / name
-            if path.exists():
-                with open(path, encoding="utf-8") as f:
-                    state = _json.load(f)
-                result = []
-                for c in state.get("cookies", []):
-                    if "chatgpt.com" not in c.get("domain", ""):
-                        continue
-                    cookie: dict = {
-                        "name": c["name"], "value": c["value"],
-                        "domain": c["domain"], "path": c.get("path", "/"),
-                    }
-                    if c.get("expires", -1) > 0:
-                        cookie["expires"] = c["expires"]
-                    if c.get("httpOnly"):
-                        cookie["httpOnly"] = True
-                    if c.get("secure"):
-                        cookie["secure"] = True
-                    result.append(cookie)
-                return result
-        return []
+        Cookies are persisted by ``auth.login_browser`` as a ``{name: value}``
+        mapping in ``~/.config/cli-web-chatgpt/auth.json`` (or the
+        ``CLI_WEB_CHATGPT_AUTH_JSON`` env var). We materialise them into the
+        list-of-dicts format Camoufox/playwright expects so headless chat runs
+        authenticated for installed users — not just inside the dev tree.
+        """
+        cookies = self._cookies()
+        result: list[dict] = []
+        for name, value in cookies.items():
+            result.append(
+                {
+                    "name": name,
+                    "value": value,
+                    "domain": ".chatgpt.com",
+                    "path": "/",
+                    "secure": True,
+                }
+            )
+        return result
 
     def send_message(
         self,

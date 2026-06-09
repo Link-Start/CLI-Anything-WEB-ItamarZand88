@@ -22,9 +22,37 @@ AUTH_FILE = AUTH_DIR / "auth.json"
 # Environment variable override for CI/CD
 ENV_VAR = "CLI_WEB_REDDIT_AUTH_JSON"
 
+# Apex domain — its cookies win over subdomain duplicates on name collision.
+APEX_DOMAIN = ".reddit.com"
+
 
 def _ensure_dir() -> None:
     AUTH_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _collect_cookies(raw_cookies: list) -> tuple[dict, str]:
+    """Collect reddit.com cookies into a ``{name: value}`` dict + token_v2.
+
+    On a name collision across subdomains (e.g. ``www.reddit.com`` vs
+    ``.reddit.com`` vs ``accounts.reddit.com``) the apex ``.reddit.com`` value
+    wins, so the result no longer depends on arbitrary iteration order.
+    """
+    cookie_dict: dict[str, str] = {}
+    domains: dict[str, str] = {}
+    token = ""
+    for c in raw_cookies:
+        if not isinstance(c, dict):
+            continue
+        name = c.get("name")
+        domain = c.get("domain", "")
+        if not name or "reddit.com" not in domain:
+            continue
+        if name not in cookie_dict or domain == APEX_DOMAIN:
+            cookie_dict[name] = c.get("value", "")
+            domains[name] = domain
+        if name == "token_v2" and (domain == APEX_DOMAIN or not token):
+            token = c.get("value", "")
+    return cookie_dict, token
 
 
 def load_auth() -> dict | None:
@@ -47,13 +75,7 @@ def load_auth() -> dict | None:
             return data
         if isinstance(data, list):
             # Raw cookie list — extract token_v2
-            token = ""
-            cookie_dict = {}
-            for c in data:
-                if isinstance(c, dict):
-                    cookie_dict[c["name"]] = c["value"]
-                    if c["name"] == "token_v2":
-                        token = c["value"]
+            cookie_dict, token = _collect_cookies(data)
             return {"token": token, "cookies": cookie_dict}
         if isinstance(data, dict):
             # Plain dict without "token" key — try to find token_v2 in values
@@ -131,15 +153,7 @@ def refresh_token() -> str | None:
             page.goto("https://www.reddit.com/", wait_until="domcontentloaded")
             page.wait_for_timeout(3000)
 
-            cookies = context.cookies()
-            token = ""
-            cookie_dict = {}
-
-            for c in cookies:
-                if "reddit.com" in c.get("domain", ""):
-                    cookie_dict[c["name"]] = c["value"]
-                    if c["name"] == "token_v2":
-                        token = c["value"]
+            cookie_dict, token = _collect_cookies(context.cookies())
 
             context.close()
 
@@ -185,15 +199,7 @@ def login_browser() -> dict:
         page.wait_for_timeout(2000)
 
         # Extract cookies
-        cookies = context.cookies()
-        cookie_dict = {}
-        token = ""
-
-        for c in cookies:
-            if "reddit.com" in c.get("domain", ""):
-                cookie_dict[c["name"]] = c["value"]
-                if c["name"] == "token_v2":
-                    token = c["value"]
+        cookie_dict, token = _collect_cookies(context.cookies())
 
         context.close()
 
