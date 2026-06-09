@@ -16,8 +16,9 @@ The highest-impact contribution: generate a CLI for a website that doesn't have 
 4. Test it locally (see [Testing](#testing) below)
 5. Submit a PR with the generated directory
 
-Your CLI becomes a reference implementation shipped with the project. We currently have 10:
-**futbin**, **notebooklm**, **gh-trending**, **producthunt**, **unsplash**, **booking**, **stitch**, **pexels**, **reddit**, **gai**.
+Your CLI becomes a reference implementation shipped with the project. We currently have 19:
+**futbin**, **notebooklm**, **gh-trending**, **producthunt**, **unsplash**, **booking**, **stitch**, **pexels**, **reddit**, **gai**, **codewiki**, **chatgpt**, **airbnb**, **amazon**, **tripadvisor**, **linkedin**, **capitoltrades**, **youtube**, **hackernews**.
+See [`registry.json`](registry.json) for the authoritative, machine-readable list.
 
 ### 2. Improve the Plugin
 

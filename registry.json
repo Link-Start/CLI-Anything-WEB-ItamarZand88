@@ -29,6 +29,7 @@
         "evolutions list",
         "evolutions get",
         "config set",
+        "config get",
         "config show",
         "config reset"
       ],
@@ -44,9 +45,20 @@
       "commands": [
         "notebooks list",
         "notebooks create",
-        "sources add",
+        "notebooks get",
+        "notebooks rename",
+        "notebooks delete",
+        "sources list",
+        "sources add-url",
+        "sources add-text",
+        "sources get",
+        "sources delete",
         "chat ask",
-        "artifacts generate"
+        "artifacts generate",
+        "artifacts generate-notes",
+        "artifacts list",
+        "artifacts download",
+        "artifacts list-audio-types"
       ],
       "install": "pip install -e notebooklm/agent-harness"
     },
@@ -100,8 +112,11 @@
       "namespace": "cli_web.booking",
       "commands": [
         "search find",
+        "autocomplete",
         "property get",
-        "destinations resolve"
+        "auth login",
+        "auth status",
+        "auth logout"
       ],
       "install": "pip install -e booking/agent-harness"
     },
@@ -368,6 +383,54 @@
         "press get"
       ],
       "install": "pip install -e capitoltrades/agent-harness"
+    },
+    {
+      "name": "cli-web-youtube",
+      "website": "youtube.com",
+      "protocol": "InnerTube REST API (httpx)",
+      "auth": "none",
+      "directory": "youtube/agent-harness",
+      "namespace": "cli_web.youtube",
+      "commands": [
+        "search videos",
+        "video get",
+        "trending list",
+        "channel get"
+      ],
+      "install": "pip install -e youtube/agent-harness"
+    },
+    {
+      "name": "cli-web-hackernews",
+      "website": "news.ycombinator.com",
+      "protocol": "REST API (Firebase + Algolia, httpx)",
+      "auth": "optional (cookie)",
+      "directory": "hackernews/agent-harness",
+      "namespace": "cli_web.hackernews",
+      "commands": [
+        "stories top",
+        "stories new",
+        "stories best",
+        "stories ask",
+        "stories show",
+        "stories jobs",
+        "stories view",
+        "search stories",
+        "search comments",
+        "user view",
+        "user favorites",
+        "user submissions",
+        "user threads",
+        "auth login",
+        "auth login-browser",
+        "auth status",
+        "auth logout",
+        "upvote",
+        "submit",
+        "comment",
+        "favorite",
+        "hide"
+      ],
+      "install": "pip install -e hackernews/agent-harness"
     }
   ]
 }
