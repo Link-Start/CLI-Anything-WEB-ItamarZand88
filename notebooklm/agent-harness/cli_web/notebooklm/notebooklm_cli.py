@@ -281,9 +281,11 @@ def whoami(as_json):
 
 # MCP server mode — exposes every command as an MCP tool over stdio.
 # Canonical adapter: cli-web-core/cli_web_core/mcp_server.py (vendored copy).
+from cli_web.notebooklm.utils.doctor import register_doctor_command  # noqa: E402
 from cli_web.notebooklm.utils.mcp_server import register_mcp_command  # noqa: E402
 
 register_mcp_command(main, app_name="notebooklm", version="0.1.0")
+register_doctor_command(main, app_name="notebooklm", pkg="notebooklm")
 
 
 if __name__ == "__main__":

@@ -162,6 +162,8 @@ def main() -> None:
 # MCP server mode — exposes every command as an MCP tool over stdio.
 # Canonical adapter: cli-web-core/cli_web_core/mcp_server.py (vendored copy).
 from cli_web.airbnb import __version__ as _pkg_version  # noqa: E402
+from cli_web.airbnb.utils.doctor import register_doctor_command  # noqa: E402
 from cli_web.airbnb.utils.mcp_server import register_mcp_command  # noqa: E402
 
 register_mcp_command(cli, app_name="airbnb", version=_pkg_version)
+register_doctor_command(cli, app_name="airbnb", pkg="airbnb")

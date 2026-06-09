@@ -34,6 +34,7 @@ MANIFEST_VERSION = 1
 SHARED_FILES: dict[str, str] = {
     "cli-web-core/cli_web_core/repl_skin.py": "utils/repl_skin.py",
     "cli-web-core/cli_web_core/mcp_server.py": "utils/mcp_server.py",
+    "cli-web-core/cli_web_core/doctor.py": "utils/doctor.py",
 }
 
 # Non-CLI vendored copies that must also track canon (relative to repo root).

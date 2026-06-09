@@ -314,6 +314,10 @@ from the CLI's own options and the standard `--json` envelope as tool output:
 No extra dependencies, no separate server code — the adapter walks the Click
 command tree at startup, so new commands automatically become new tools.
 
+Every CLI also ships a `doctor` command (`cli-web-<app> doctor [--json]`)
+that diagnoses the local setup — install, Python version, auth file and its
+permissions, optional dependencies — before you ever need to open an issue.
+
 <p align="center">
   <img src="assets/agentic-demo.gif" alt="Agentic Pattern Demo" width="100%">
 </p>
