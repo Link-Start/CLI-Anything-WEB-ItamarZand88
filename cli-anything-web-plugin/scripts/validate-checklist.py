@@ -110,15 +110,22 @@ class Validator:
                 return True
         return False
 
+    def expect(self, category: str, check_id: str, description: str,
+               condition: bool, fail_detail: str = "", pass_detail: str = "") -> CheckResult:
+        """Record a mechanical pass/fail check in one line.
+
+        For the common ``check() -> pass_()/fail()`` pattern. Checks with
+        na/skip states or branch-specific detail keep their explicit form.
+        """
+        r = self.check(category, check_id, description)
+        return r.pass_(pass_detail) if condition else r.fail(fail_detail)
+
     # ── Category 1: Directory Structure ────────────────────────────────────
     def check_directory_structure(self):
         cat = "1. Directory Structure"
 
-        r = self.check(cat, "1.1", "cli_web/<app>/ exists")
-        if self.pkg_dir.is_dir():
-            r.pass_()
-        else:
-            r.fail(f"Missing: {self.pkg_dir}")
+        self.expect(cat, "1.1", "cli_web/<app>/ exists",
+                    self.pkg_dir.is_dir(), f"Missing: {self.pkg_dir}")
 
         r = self.check(cat, "1.2", "<APP>.md exists at harness root")
         app_md = self.harness_dir / f"{self.APP_NAME}.md"
@@ -134,32 +141,20 @@ class Validator:
             else:
                 r.fail("No API map .md found")
 
-        r = self.check(cat, "1.3", "cli_web/ has NO __init__.py (namespace package)")
         ns_init = self.harness_dir / "cli_web" / "__init__.py"
-        if ns_init.exists():
-            r.fail("cli_web/__init__.py exists — breaks namespace package")
-        else:
-            r.pass_()
+        self.expect(cat, "1.3", "cli_web/ has NO __init__.py (namespace package)",
+                    not ns_init.exists(), "cli_web/__init__.py exists — breaks namespace package")
 
-        r = self.check(cat, "1.4", "<app>/ HAS __init__.py")
-        if (self.pkg_dir / "__init__.py").exists():
-            r.pass_()
-        else:
-            r.fail("Missing __init__.py in sub-package")
+        self.expect(cat, "1.4", "<app>/ HAS __init__.py",
+                    (self.pkg_dir / "__init__.py").exists(), "Missing __init__.py in sub-package")
 
-        r = self.check(cat, "1.5", "core/, commands/, utils/, tests/ all present")
         dirs = ["core", "commands", "utils", "tests"]
         missing = [d for d in dirs if not (self.pkg_dir / d).is_dir()]
-        if missing:
-            r.fail(f"Missing directories: {missing}")
-        else:
-            r.pass_()
+        self.expect(cat, "1.5", "core/, commands/, utils/, tests/ all present",
+                    not missing, f"Missing directories: {missing}")
 
-        r = self.check(cat, "1.6", "setup.py at harness root")
-        if (self.harness_dir / "setup.py").exists():
-            r.pass_()
-        else:
-            r.fail("Missing setup.py")
+        self.expect(cat, "1.6", "setup.py at harness root",
+                    (self.harness_dir / "setup.py").exists(), "Missing setup.py")
 
     # ── Category 2: Required Files ─────────────────────────────────────────
     def check_required_files(self):
@@ -205,17 +200,12 @@ class Validator:
         cli_file = self.pkg_dir / f"{self.app_underscore}_cli.py"
         content = self._read_file(cli_file) or ""
 
-        r = self.check(cat, "3.1", "Click framework with @click.group")
-        r.pass_() if "@click.group" in content else r.fail()
-
-        r = self.check(cat, "3.2", "--json flag present")
-        r.pass_() if '"--json"' in content or "'--json'" in content else r.fail()
-
-        r = self.check(cat, "3.3", "REPL via invoke_without_command=True")
-        r.pass_() if "invoke_without_command=True" in content else r.fail()
-
-        r = self.check(cat, "3.4", "ReplSkin used")
-        r.pass_() if "ReplSkin" in content else r.fail()
+        self.expect(cat, "3.1", "Click framework with @click.group", "@click.group" in content)
+        self.expect(cat, "3.2", "--json flag present",
+                    '"--json"' in content or "'--json'" in content)
+        self.expect(cat, "3.3", "REPL via invoke_without_command=True",
+                    "invoke_without_command=True" in content)
+        self.expect(cat, "3.4", "ReplSkin used", "ReplSkin" in content)
 
         r = self.check(cat, "3.5", "Auth group (login, status)")
         if not self.has_auth:
@@ -225,8 +215,7 @@ class Validator:
         else:
             r.fail("No auth command group found")
 
-        r = self.check(cat, "3.6", "pass_context used")
-        r.pass_() if "pass_context" in content else r.fail()
+        self.expect(cat, "3.6", "pass_context used", "pass_context" in content)
 
         r = self.check(cat, "3.7", "handle_errors context manager in commands")
         if self._any_py_contains(self.pkg_dir / "commands", r"handle_errors"):
@@ -236,11 +225,9 @@ class Validator:
         else:
             r.fail("No handle_errors usage found")
 
-        r = self.check(cat, "3.8", "REPL uses shlex.split")
-        r.pass_() if "shlex.split" in content else r.fail()
-
-        r = self.check(cat, "3.9", "REPL dispatches with standalone_mode=False")
-        r.pass_() if "standalone_mode=False" in content else r.fail()
+        self.expect(cat, "3.8", "REPL uses shlex.split", "shlex.split" in content)
+        self.expect(cat, "3.9", "REPL dispatches with standalone_mode=False",
+                    "standalone_mode=False" in content)
 
     # ── Category 4: Core Modules ───────────────────────────────────────────
     def check_core_modules(self):
@@ -257,8 +244,7 @@ class Validator:
         else:
             r.fail(f"Only found: {found}")
 
-        r = self.check(cat, "4.2", "to_dict() on base exception")
-        r.pass_() if "to_dict" in exc_content else r.fail()
+        self.expect(cat, "4.2", "to_dict() on base exception", "to_dict" in exc_content)
 
         # client.py
         client_content = self._read_file(self.pkg_dir / "core" / "client.py") or ""
@@ -298,11 +284,9 @@ class Validator:
                     missing.append("client.py not calling refresh on auth failure")
                 r.fail("; ".join(missing))
 
-        r = self.check(cat, "4.5", "Context manager protocol")
-        if "__enter__" in client_content and "__exit__" in client_content:
-            r.pass_()
-        else:
-            r.fail("Missing __enter__/__exit__")
+        self.expect(cat, "4.5", "Context manager protocol",
+                    "__enter__" in client_content and "__exit__" in client_content,
+                    "Missing __enter__/__exit__")
 
         # auth.py
         r = self.check(cat, "4.6", "Auth secure storage (chmod 600)")
