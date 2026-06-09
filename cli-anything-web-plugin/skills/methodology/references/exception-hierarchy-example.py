@@ -1,13 +1,18 @@
 """
 Reference: Domain-Specific Exception Hierarchy
 ================================================
-Every generated CLI must have core/exceptions.py with typed exceptions.
+Every generated CLI has core/exceptions.py with typed exceptions.
 The client maps HTTP status codes to these exceptions, enabling:
 - Proper retry logic (only retry on recoverable errors)
 - Structured JSON error output (error code from exception type)
 - Correct CLI exit codes (auth=1, server=2, etc.)
 
-Adapt class names to the target app (e.g., NotebookLMError, FutbinError).
+IMPORTANT: core/exceptions.py is a SHARED, single-source file. The base class
+is always `AppError` (NOT `<App>Error`) — do not rename it per app. scaffold-cli.py
+generates it from the canonical at `cli-anything-web-plugin/shared/exceptions.py`,
+and `scripts/sync-shared.py --check` enforces that every CLI's copy matches.
+Put app-specific error *messages* at the raise-site, not new base classes.
+This file is illustrative; edit the canonical, then re-sync.
 """
 
 

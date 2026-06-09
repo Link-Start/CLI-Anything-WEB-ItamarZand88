@@ -92,137 +92,20 @@ if __name__ == "__main__":
 
 ### 3.3: `core/exceptions.py`
 
-```python
-"""Typed exception hierarchy for cli-web-{app_name}.
+**Do not hand-write this file, and do not rename the base class per app.**
+`core/exceptions.py` is a SHARED, single-source file: the base exception is
+always `AppError` (with the standard `AuthError`, `RateLimitError`,
+`NetworkError`, `ServerError`, `NotFoundError`, `RPCError`, `ParseError`, ...
+subclasses, plus `error_code_for`/`raise_for_status` helpers).
 
-Every exception carries enough context for:
-- Retry decisions (recoverable flag, retry_after)
-- Structured JSON output (to_dict / error_code_for)
-- CLI exit codes (auth=1, server=2, network=3)
-"""
-from __future__ import annotations
+`scaffold-cli.py` writes it from the canonical at
+`cli-anything-web-plugin/shared/exceptions.py`, and
+`scripts/sync-shared.py --check` (run in CI) fails if any CLI's copy drifts.
 
-
-class {AppName}Error(Exception):
-    """Base exception for all cli-web-{app_name} errors."""
-
-    def to_dict(self) -> dict:
-        return {{
-            "error": True,
-            "code": _error_code_for(self),
-            "message": str(self),
-        }}
-
-
-class AuthError({AppName}Error):
-    """Authentication failed -- expired cookies, invalid tokens, session timeout.
-
-    Args:
-        recoverable: If True, client retries once (token refresh).
-                     If False, user must re-login.
-    """
-
-    def __init__(self, message: str, recoverable: bool = True):
-        self.recoverable = recoverable
-        super().__init__(message)
-
-
-class RateLimitError({AppName}Error):
-    """Server returned 429 -- too many requests.
-
-    Args:
-        retry_after: Seconds to wait before retrying (from Retry-After header).
-    """
-
-    def __init__(self, message: str, retry_after: float | None = None):
-        self.retry_after = retry_after
-        super().__init__(message)
-
-    def to_dict(self) -> dict:
-        d = super().to_dict()
-        if self.retry_after is not None:
-            d["retry_after"] = self.retry_after
-        return d
-
-
-class NetworkError({AppName}Error):
-    """Connection failed -- DNS resolution, TCP connect, TLS handshake."""
-
-
-class ServerError({AppName}Error):
-    """Server returned 5xx -- internal error, bad gateway, service unavailable.
-
-    Args:
-        status_code: The HTTP status code (500, 502, 503, etc.)
-    """
-
-    def __init__(self, message: str, status_code: int = 500):
-        self.status_code = status_code
-        super().__init__(message)
-
-
-class NotFoundError({AppName}Error):
-    """Resource not found (HTTP 404)."""
-
-
-class RPCError({AppName}Error):
-    """RPC call failed (batchexecute decode error, unexpected response shape)."""
-
-
-# --- HTTP status code mapping ---
-
-_CODE_MAP = {{
-    401: lambda msg: AuthError(msg, recoverable=True),
-    403: lambda msg: AuthError(msg, recoverable=True),
-    404: lambda msg: NotFoundError(msg),
-    # 429 handled separately below to extract Retry-After header
-}}
-
-
-def _error_code_for(exc: {AppName}Error) -> str:
-    """Map exception type to a JSON error code string."""
-    mapping = {{
-        AuthError: "AUTH_EXPIRED",
-        RateLimitError: "RATE_LIMITED",
-        NotFoundError: "NOT_FOUND",
-        ServerError: "SERVER_ERROR",
-        NetworkError: "NETWORK_ERROR",
-        RPCError: "RPC_ERROR",
-    }}
-    for exc_type, code in mapping.items():
-        if isinstance(exc, exc_type):
-            return code
-    return "UNKNOWN_ERROR"
-
-
-def raise_for_status(response) -> None:
-    """Map HTTP response status to a typed exception. Call after every request."""
-    if response.status_code < 400:
-        return
-
-    text = getattr(response, "text", "")[:200]
-    msg = f"HTTP {{response.status_code}}: {{text}}"
-
-    # Specific status codes
-    if response.status_code in _CODE_MAP:
-        raise _CODE_MAP[response.status_code](msg)
-
-    # Extract Retry-After for 429
-    if response.status_code == 429:
-        retry_after = None
-        if hasattr(response, "headers"):
-            raw = response.headers.get("Retry-After")
-            if raw:
-                retry_after = float(raw)
-        raise RateLimitError(msg, retry_after=retry_after)
-
-    # 5xx range
-    if 500 <= response.status_code < 600:
-        raise ServerError(msg, status_code=response.status_code)
-
-    # 4xx fallback
-    raise {AppName}Error(msg)
-```
+To change exception behavior, edit the canonical and run
+`python scripts/sync-shared.py` — never edit a generated copy. Put app-specific
+error *messages* at the raise-site, not in new base classes. See
+`skills/methodology/references/exception-hierarchy-example.py` for the shape.
 
 ### 3.4: `core/config.py`
 
@@ -272,7 +155,7 @@ from __future__ import annotations
 import httpx
 
 from .exceptions import (
-    {AppName}Error,
+    AppError,
     AuthError,
     NetworkError,
     raise_for_status,
@@ -347,7 +230,7 @@ from __future__ import annotations
 from curl_cffi import requests as curl_requests
 
 from .exceptions import (
-    {AppName}Error,
+    AppError,
     AuthError,
     NetworkError,
     raise_for_status,
@@ -429,7 +312,7 @@ def _graphql(self, query: str, variables: dict | None = None) -> dict:
     resp = self._request("POST", "/graphql", json=payload)
     body = resp.json()
     if "errors" in body:
-        raise {AppName}Error(f"GraphQL error: {{body['errors'][0].get('message', body['errors'])}}")
+        raise AppError(f"GraphQL error: {{body['errors'][0].get('message', body['errors'])}}")
     return body.get("data", {{}})
 ```
 
@@ -442,7 +325,7 @@ from __future__ import annotations
 import httpx
 
 from .exceptions import (
-    {AppName}Error,
+    AppError,
     AuthError,
     NetworkError,
     RPCError,
@@ -523,7 +406,7 @@ from contextlib import contextmanager
 
 import click
 
-from ..core.exceptions import {AppName}Error, _error_code_for
+from ..core.exceptions import AppError, _error_code_for
 
 
 # --- Windows UTF-8 fix (always include) ---
@@ -559,7 +442,7 @@ def handle_errors(json_mode: bool = False):
         raise SystemExit(130)
     except (click.exceptions.Exit, click.UsageError):
         raise
-    except {AppName}Error as exc:
+    except AppError as exc:
         if json_mode:
             print_json(exc.to_dict())
         else:
@@ -582,14 +465,14 @@ def print_json(data) -> None:
 def resolve_partial_id(partial: str, items: list[dict], key: str = "id") -> dict:
     """Resolve a partial ID prefix to a single item.
 
-    Raises {AppName}Error if zero or multiple matches.
+    Raises AppError if zero or multiple matches.
     """
     matches = [item for item in items if str(item.get(key, "")).startswith(partial)]
     if len(matches) == 0:
-        raise {AppName}Error(f"No item found matching '{{partial}}'")
+        raise AppError(f"No item found matching '{{partial}}'")
     if len(matches) > 1:
         ids = [str(m.get(key, "")) for m in matches[:5]]
-        raise {AppName}Error(f"Ambiguous ID '{{partial}}', matches: {{', '.join(ids)}}")
+        raise AppError(f"Ambiguous ID '{{partial}}', matches: {{', '.join(ids)}}")
     return matches[0]
 # --- end conditional: has_partial_ids ---
 
@@ -616,7 +499,7 @@ def poll_until_complete(
         The truthy result from check_fn.
 
     Raises:
-        {AppName}Error if timeout is exceeded.
+        AppError if timeout is exceeded.
     """
     import time
 
@@ -629,7 +512,7 @@ def poll_until_complete(
         time.sleep(delay)
         elapsed += delay
         delay = min(delay * backoff_factor, max_delay)
-    raise {AppName}Error(f"Operation timed out after {{timeout}}s")
+    raise AppError(f"Operation timed out after {{timeout}}s")
 # --- end conditional: has_polling ---
 
 

@@ -5,7 +5,7 @@ import httpx
 
 from .auth import load_auth, refresh_auth
 from .exceptions import (
-    ${AppName}Error,
+    AppError,
     AuthError,
     NetworkError,
     raise_for_status,

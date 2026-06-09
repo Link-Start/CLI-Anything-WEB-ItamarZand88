@@ -171,7 +171,7 @@ def build_client(variables: dict, protocol: str, http_client: str) -> str:
         resp = self._request("POST", "/graphql", json=payload, **kwargs)
         data = resp.json()
         if "errors" in data:
-            raise ${AppName}Error(data["errors"][0].get("message", "GraphQL error"))
+            raise AppError(data["errors"][0].get("message", "GraphQL error"))
         return data.get("data", data)
 
 '''

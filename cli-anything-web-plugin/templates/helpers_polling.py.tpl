@@ -21,11 +21,11 @@ def poll_until_complete(
         The truthy result from check_fn.
 
     Raises:
-        ${AppName}Error if timeout is exceeded.
+        AppError if timeout is exceeded.
     """
     import time
 
-    from ..core.exceptions import ${AppName}Error
+    from ..core.exceptions import AppError
 
     elapsed = 0.0
     delay = initial_delay
@@ -36,4 +36,4 @@ def poll_until_complete(
         time.sleep(delay)
         elapsed += delay
         delay = min(delay * backoff_factor, max_delay)
-    raise ${AppName}Error(f"Operation timed out after {timeout}s")
+    raise AppError(f"Operation timed out after {timeout}s")
