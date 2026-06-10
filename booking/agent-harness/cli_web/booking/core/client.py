@@ -118,9 +118,7 @@ class BookingClient:
 
         return data.get("data", {})
 
-    def _fetch_html(
-        self, url: str, params: dict | None = None, _attempt: int = 0
-    ) -> BeautifulSoup:
+    def _fetch_html(self, url: str, params: dict | None = None, _attempt: int = 0) -> BeautifulSoup:
         """Fetch an SSR HTML page with WAF cookies.
 
         Uses only the aws-waf-token cookie — the bkng cookie contains

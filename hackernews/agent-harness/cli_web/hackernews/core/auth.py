@@ -252,9 +252,7 @@ def refresh_auth() -> dict[str, str]:
             break
 
     if not user_cookie or not username:
-        raise AuthError(
-            "Session expired. Run: cli-web-hackernews auth login", recoverable=False
-        )
+        raise AuthError("Session expired. Run: cli-web-hackernews auth login", recoverable=False)
 
     save_auth(user_cookie, username)
     return {"user_cookie": user_cookie, "username": username}

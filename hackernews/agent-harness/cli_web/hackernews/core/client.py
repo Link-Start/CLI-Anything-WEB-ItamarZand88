@@ -200,9 +200,7 @@ class HackerNewsClient:
             raise AuthError()
         return self._user_cookie
 
-    def _web_request(
-        self, method: str, url: str, *, _attempt: int = 0, **kwargs
-    ) -> httpx.Response:
+    def _web_request(self, method: str, url: str, *, _attempt: int = 0, **kwargs) -> httpx.Response:
         """Execute an authenticated web request with standard error handling.
 
         Auth retry flow (CONVENTIONS.md §Auth Rules — never more than 3 attempts):

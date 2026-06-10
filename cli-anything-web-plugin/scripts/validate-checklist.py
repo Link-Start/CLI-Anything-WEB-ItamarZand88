@@ -339,10 +339,9 @@ class Validator:
 
         r = self.check(cat, "4.3", "Client maps HTTP status to exceptions")
         http_clients = ("httpx", "curl_cffi", "requests")
-        is_browser_client = (
-            any(b in client_content for b in ("playwright", "camoufox"))
-            and not any(h in client_content for h in http_clients)
-        )
+        is_browser_client = any(
+            b in client_content for b in ("playwright", "camoufox")
+        ) and not any(h in client_content for h in http_clients)
         if is_browser_client:
             r.na("Browser-rendered client — no HTTP status layer")
         else:

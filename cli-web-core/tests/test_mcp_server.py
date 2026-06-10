@@ -140,6 +140,7 @@ def test_unknown_tool_and_method(server):
 def test_register_adds_command(demo_cli):
     assert "mcp-serve" in demo_cli.commands
 
+
 def test_multi_value_params_schema(server):
     resp = server.handle({"jsonrpc": "2.0", "id": 8, "method": "tools/list"})
     search = next(t for t in resp["result"]["tools"] if t["name"] == "search")
