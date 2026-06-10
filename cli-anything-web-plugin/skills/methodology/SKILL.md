@@ -19,6 +19,20 @@ Analyze captured traffic, design the CLI command structure, and implement the
 complete Python CLI package. This skill owns the core transformation from raw
 HTTP traffic to a production-ready CLI.
 
+Copy this checklist and check off items as you complete them:
+
+```
+Phase 2 Progress:
+- [ ] Prerequisites: raw-traffic.json exists (+ auth state if the site needs auth)
+- [ ] Step A: traffic analyzed, protocol identified, <APP>.md written
+- [ ] Step A: api-spec.json written (every endpoint cites raw-traffic.json evidence)
+       and passes `cli-web-devkit spec validate`
+- [ ] Step B.0: scaffolded via scaffold-cli.py (.manifest.json present)
+- [ ] Step B: client endpoint methods implemented from the spec
+- [ ] Step B: command modules implemented + registered, REPL help in sync
+- [ ] Smoke check passed (no protocol leaks), phase-state marked complete
+```
+
 ---
 
 ## Prerequisites (Hard Gate)
@@ -56,11 +70,12 @@ no login needed), the "Auth state captured" prerequisite does not apply. Note
    verify its findings and fill in anything marked "unknown" by reading `raw-traffic.json`
    manually.
 
-   **Enhanced analysis (v1.3.0, when captured via mitmproxy-capture.py):**
-   - `request_sequence`: Timeline-ordered requests with auth flow detection (login → token → API calls)
-   - `session_lifecycle`: Cookie inventory, auth cookie identification, session pattern (cookie_auth/token_refresh/no_session)
-   - `endpoint_sizes`: Response body size classification per endpoint (small/medium/large) and total data transferred
-   These fields are only present when `mitmproxy-capture.py` was used. If missing (`has_timestamps: false`), rely on manual analysis.
+   **Enhanced analysis (present only when captured via mitmproxy):**
+   `request_sequence` (timeline-ordered requests with auth-flow detection),
+   `session_lifecycle` (cookie inventory, auth-cookie identification, session
+   pattern), and `endpoint_sizes` (response-size classification). If these
+   are missing (`has_timestamps: false`), the capture came from the default
+   trace path — rely on manual analysis for sequence/session detail.
 
    If `traffic-analysis.json` doesn't exist, run the analyzer:
    ```bash

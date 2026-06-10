@@ -9,6 +9,20 @@ Machine enforcement: most rules here are checked by
 `scripts/validate-checklist.py` (Tier 1 = blocks publish), the Phase 4 review
 agents, and the fleet contract suite at `tests/contract/`.
 
+## Contents
+
+- §Naming Conventions
+- §Exception Hierarchy
+- §JSON Envelope
+- §Exit Codes
+- §Auth Rules
+- §REPL Rules
+- §Exponential Backoff & Polling
+- §Windows UTF-8 Fix
+- §Subprocess Test Rule
+- §Protocol-Leak Smoke Check
+- §Generated CLI Structure (summary)
+
 ---
 
 ## §Naming Conventions

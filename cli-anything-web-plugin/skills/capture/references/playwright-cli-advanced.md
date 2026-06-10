@@ -5,6 +5,15 @@
 
 Advanced playwright-cli commands for scenarios not covered by basic click/fill/snapshot -- wait strategies, iframe handling, file downloads, and page information extraction.
 
+## Contents
+
+- The `run-code` Command
+- `run-code` vs `eval`
+- Wait Strategies
+- Frame / Iframe Handling
+- Handling Localized / RTL UIs
+- File Download Handling
+
 ## The `run-code` Command
 
 Execute arbitrary async Playwright code when built-in commands are insufficient:

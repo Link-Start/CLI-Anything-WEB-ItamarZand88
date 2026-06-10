@@ -17,6 +17,21 @@ when_to_use: >
 Write and document tests for cli-web-* CLIs. This skill owns the full testing
 lifecycle: test implementation and test documentation (plan + results).
 
+Copy this checklist and check off items as you complete them:
+
+```
+Phase 3 Progress:
+- [ ] Prerequisites: implementation complete, CLI installed, <APP>.md exists
+- [ ] Auth verified working (auth login + status) — auth CLIs only
+- [ ] Unit tests written (mocked HTTP, typed-exception + helper coverage)
+- [ ] E2E tests written (live round-trips, FAIL not skip on missing auth)
+- [ ] Subprocess tests written (_resolve_cli pattern)
+- [ ] TEST.md Part 1 generated (generate-test-docs.py plan)
+- [ ] Full suite green incl. CLI_WEB_FORCE_INSTALLED=1 subprocess run
+- [ ] TEST.md Part 2 appended (generate-test-docs.py results)
+- [ ] phase-state marked complete
+```
+
 ---
 
 ## Prerequisites (Hard Gate)
@@ -79,51 +94,11 @@ independent. Start unit tests during Phase 2 if possible (they don't depend on c
 - HTML scraper assertions: check actual fields (name, id, price), not just `isinstance(results, list)`
 - See `references/test-code-examples.md` for patterns
 
-### VCR.py Integration Tests (Recommended)
+### VCR.py Integration Tests (Recommended for RPC/GraphQL)
 
-For apps with complex protocols (batchexecute, GraphQL, custom RPC), add a VCR.py
-integration test layer between unit and live E2E:
-
-**Setup:**
-```bash
-pip install vcrpy pytest-recording
-```
-
-**Recording cassettes:**
-```python
-# test_integration.py
-import pytest
-
-@pytest.mark.vcr
-def test_list_notebooks(authenticated_client):
-    """Recorded against live API, replayed from cassette."""
-    notebooks = authenticated_client.notebooks.list()
-    assert len(notebooks) > 0
-    assert notebooks[0].id
-    assert notebooks[0].title
-```
-
-**Recording new cassettes:**
-```bash
-# Record mode — makes real API calls, saves responses
-CLI_WEB_VCR_RECORD=1 pytest tests/test_integration.py -m vcr -v
-
-# Normal mode — replays from cassettes (no network)
-pytest tests/test_integration.py -m vcr -v
-```
-
-**Cassette storage:** `tests/cassettes/<test_name>.yaml`
-
-**When to use VCR vs unit mocks:**
-- VCR: complex response parsing, RPC protocols, multi-step API flows
-- Unit mocks: simple JSON APIs, testing error handling paths, testing retry logic
-
-**Marker convention:**
-```python
-@pytest.mark.vcr       # Replays from cassette
-@pytest.mark.e2e       # Requires live API + auth
-@pytest.mark.unit      # No network, fast
-```
+For complex protocols, add a recorded-cassette layer between unit and live
+E2E — real responses, replayed offline. Setup, recording workflow, and the
+marker convention: `references/vcr-testing.md`.
 
 ### Fixture Realism (for HTML scrapers)
 
@@ -214,48 +189,34 @@ def test_json_error_output(cli_runner):
 
 ### Helper Function Testing
 
-Unit tests MUST cover the shared helpers in `utils/helpers.py` — these are used by
-every command, so a bug here silently breaks the entire CLI:
+Unit tests cover the shared helpers in `utils/helpers.py` — every command
+routes through them, so a bug here silently breaks the whole CLI. Required
+coverage: partial-ID resolution (unique prefix, ambiguous raises), filename
+sanitization, persistent context set/get, and `handle_errors` exit codes.
+Complete code patterns: `references/test-code-examples.md` §Helper tests.
+
+#### handle_errors exit codes (contract)
+
+CLIs scaffolded from template v2.1+ map domain errors to the numeric
+exit-code contract (CONVENTIONS.md §Exit Codes) — assert the contract:
 
 ```python
-# test_core.py — partial ID resolution
-def test_partial_id_unique_prefix():
-    """Short unique prefix resolves to single match."""
-    items = [FakeItem("abc123-uuid"), FakeItem("xyz789-uuid")]
-    result = resolve_partial_id("abc", items)
-    assert result.id == "abc123-uuid"
-
-def test_partial_id_ambiguous_raises():
-    """Ambiguous prefix raises BadParameter."""
-    items = [FakeItem("abc123"), FakeItem("abc456")]
-    with pytest.raises(click.BadParameter):
-        resolve_partial_id("abc", items)
-
-# test_core.py — filename sanitization
-def test_sanitize_invalid_chars():
-    assert sanitize_filename('test/file:name*') == "test_file_name_"
-    assert sanitize_filename("") == "untitled"
-
-# test_core.py — persistent context
-def test_context_set_and_get(tmp_path):
-    """Context persists to JSON file."""
-    with patch("...helpers.CONTEXT_FILE", tmp_path / "context.json"):
-        set_context_value("notebook_id", "test-123")
-        assert get_context_value("notebook_id") == "test-123"
-
-# test_core.py — handle_errors exit codes
-def test_handle_errors_auth_exits_1():
+def test_handle_errors_auth_exit_code():
     with pytest.raises(SystemExit) as exc:
         with handle_errors():
             raise AuthError("expired")
-    assert exc.value.code == 1
+    assert exc.value.code == 3      # EXIT_AUTH
 
-def test_handle_errors_unknown_exits_2():
+def test_handle_errors_unknown_exit_code():
     with pytest.raises(SystemExit) as exc:
         with handle_errors():
             raise ValueError("bug")
-    assert exc.value.code == 2
+    assert exc.value.code == 1      # EXIT_UNKNOWN
 ```
+
+CLIs generated before template v2.1 use the legacy codes (domain=1,
+unexpected=2) — assert whatever the CLI's own `helpers.py` implements; do
+not change a legacy CLI's exit codes from a test.
 
 ### Round-Trip Test Requirement
 
@@ -301,44 +262,17 @@ with additional context:
 4. **Realistic Workflow Scenarios** — Multi-step flows with verification criteria:
 ### Handling Client-Side Operations in E2E Tests
 
-Some batchexecute/RPC operations are **client-side** — the browser generates the ID
-and the API just acknowledges (returns null). This is common for project/document
-creation in Google apps.
+Some batchexecute/RPC operations are **client-side** — the browser generates
+the ID and the API just acknowledges (returns null). Common for
+project/document creation in Google apps.
 
-**How to detect:** If `create_X()` returns None during the methodology smoke check,
-the operation is client-side.
-
-**How to test:**
-```python
-# DON'T: test create → get round trip (create returns None)
-def test_create_project(self):
-    project = client.create_project()
-    assert project is not None  # WILL FAIL for client-side creates
-
-# DO: test operations that work via RPC
-def test_delete_project(self):
-    """Delete an existing project (creation was via browser)."""
-    projects = client.list_projects()
-    assert len(projects) > 0, "No projects to test with"
-    # Pick a safe target (not the user's main projects)
-    target = find_safe_delete_target(projects)
-    if not target:
-        pytest.skip("No safe delete target — all projects appear important")
-    result = client.delete_project(target.id)
-    assert result is True
-
-# DO: test the list-diff pattern if create_X uses it
-def test_create_via_list_diff(self):
-    """Test create if it uses the list-before/after pattern."""
-    before = len(client.list_projects())
-    project = client.create_project(prompt="test prompt")
-    if project is None:
-        pytest.skip("Create is client-side only — requires browser")
-    after = len(client.list_projects())
-    assert after > before
-```
-
-**Document in TEST.md** which operations are client-side and can't be tested via E2E.
+- **Detect:** `create_X()` returned None during the methodology smoke check.
+- **Test instead:** operations that work via RPC (delete with a safe target,
+  list-diff create), and `pytest.skip` with the reason when create is
+  browser-only. Code patterns: `references/test-code-examples.md`
+  §Client-side operations.
+- **Document in TEST.md** which operations are client-side and untestable
+  via E2E.
 
 ---
 

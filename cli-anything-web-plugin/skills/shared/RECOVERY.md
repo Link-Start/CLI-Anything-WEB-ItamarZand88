@@ -4,6 +4,14 @@ When a hard gate fails, come here. Each section is a decision tree: identify
 the failure signature, apply the targeted remediation, and bound your retries.
 Never improvise retry loops — every tree below has an explicit retry budget.
 
+## Contents
+
+- §tracing-stop Failure
+- §parse-trace Failure
+- §validate-capture Non-Zero Exit
+- §phase-state Check Failures
+- §scaffold-cli.py Unavailable
+
 ---
 
 ## §tracing-stop Failure

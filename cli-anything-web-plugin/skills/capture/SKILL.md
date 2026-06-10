@@ -18,6 +18,18 @@ when_to_use: >
 Assess the site, then capture comprehensive HTTP traffic. This skill combines
 site assessment with full traffic recording in a single browser session.
 
+Copy this checklist and check off items as you complete them:
+
+```
+Phase 1 Progress:
+- [ ] Prerequisites: playwright-cli available, checkpoint restored if one exists
+- [ ] Step 1: Browser open on target URL
+- [ ] Step 2: Fingerprint run + auth handled + profile classified + assessment.md written
+- [ ] Step 3: Full capture — exploration targets met for the profile
+- [ ] Step 4: Trace parsed, validate-capture.py PASSED (the gate)
+- [ ] Step 5: Browser closed, checkpoint + phase-state marked complete
+```
+
 ---
 
 ## CRITICAL EXECUTION RULES
@@ -47,29 +59,11 @@ Do NOT start unless:
 
 ### Optional `--mitmproxy` mode
 
-Use this when the default `--mitmproxy` flag was passed to `/cli-anything-web`,
-or when you need no body truncation, real-time noise filtering, and enhanced
-metadata (timestamps, cookies, body sizes). Requires `pip install mitmproxy`
-(Python 3.12+).
-
-```bash
-# Start the proxy (generates .playwright/cli.proxy.config.json automatically)
-python ${CLAUDE_PLUGIN_ROOT}/scripts/mitmproxy-capture.py start-proxy --port 8080
-
-# Open the browser routed through the proxy
-npx @playwright/cli@latest -s=<app> open <url> \
-  --config=.playwright/cli.proxy.config.json --headed
-
-# ... browse normally (snapshot, click, fill, goto) ...
-
-npx @playwright/cli@latest -s=<app> close
-python ${CLAUDE_PLUGIN_ROOT}/scripts/mitmproxy-capture.py stop-proxy \
-  --port 8080 -o <app>/traffic-capture/raw-traffic.json
-```
-
-The `start-proxy` command creates `.playwright/cli.proxy.config.json` as part
-of startup — no manual config file needed. When the default playwright-cli path
-fails entirely (e.g., Node not available), fall back to chrome-devtools-mcp via
+When the `--mitmproxy` flag was passed to `/cli-anything-web` (or the capture
+needs untruncated bodies / enhanced metadata), follow this workflow with the
+step substitutions in `references/mitmproxy-mode.md` — Steps 1, 3, and 4
+differ; everything else is identical. When playwright-cli itself is
+unavailable (e.g., no Node), fall back to chrome-devtools-mcp via
 `launch-chrome-debug.sh` — see HARNESS.md Tool Hierarchy.
 
 ### Public API Shortcut
@@ -119,13 +113,8 @@ npx @playwright/cli@latest -s=<app> open <url> --headed --persistent
 # Do NOT re-navigate or restart when you see this. The session is still open.
 ```
 
-> **If `--mitmproxy` mode:** Replace the `open` command above with:
-> ```bash
-> python ${CLAUDE_PLUGIN_ROOT}/scripts/mitmproxy-capture.py start-proxy --port 8080
-> npx @playwright/cli@latest -s=<app> open <url> --config=.playwright/cli.proxy.config.json --headed
-> ```
-> This starts the proxy first, then opens the browser routed through it.
-> All subsequent `snapshot`, `click`, `fill`, `goto` commands work exactly the same.
+> **`--mitmproxy` mode:** use the Step 1 substitution in
+> `references/mitmproxy-mode.md` (start the proxy, then open through it).
 
 **Do NOT ask the user to log in yet** — Step 2 will determine if auth is needed.
 
@@ -273,10 +262,8 @@ npx @playwright/cli@latest -s=<app> tracing-start
 
 ```
 
-> **If `--mitmproxy` mode:** Skip `tracing-start` and HAR recording above.
-> mitmproxy is already capturing all traffic since Step 1 — just proceed
-> to the exploration below. Every click, navigation, and form submission
-> is automatically recorded by the proxy.
+> **`--mitmproxy` mode:** skip `tracing-start` and HAR recording — the proxy
+> is already capturing (see `references/mitmproxy-mode.md`).
 
 > **HAR recording is optional but recommended.** It produces a standard HAR file
 > alongside the trace. This enables `mitmproxy2swagger` to auto-generate an
@@ -366,22 +353,9 @@ python ${CLAUDE_PLUGIN_ROOT}/scripts/analyze-traffic.py \
   <app>/traffic-capture/raw-traffic.json --summary
 ```
 
-> **If `--mitmproxy` mode:** Replace the parse/analyze block above with:
-> ```bash
-> # Stop the proxy and save captured traffic (includes auto-analysis)
-> python ${CLAUDE_PLUGIN_ROOT}/scripts/mitmproxy-capture.py stop-proxy \
->   --port 8080 -o <app>/traffic-capture/raw-traffic.json
->
-> # Validate the capture (same gate applies)
-> python ${CLAUDE_PLUGIN_ROOT}/scripts/validate-capture.py <app>
->
-> # Then run the analyzer for the full report:
-> python ${CLAUDE_PLUGIN_ROOT}/scripts/analyze-traffic.py \
->   <app>/traffic-capture/raw-traffic.json --summary
-> ```
-> No `tracing-stop` or `parse-trace.py` needed — mitmproxy already has the data.
-> The analysis will include enhanced fields (request_sequence, session_lifecycle,
-> endpoint_sizes) that are only available with mitmproxy capture.
+> **`--mitmproxy` mode:** replace the parse/analyze block with the Step 4
+> substitution in `references/mitmproxy-mode.md` (stop-proxy already includes
+> analysis; the same validate-capture gate applies).
 
 ---
 
@@ -390,8 +364,10 @@ python ${CLAUDE_PLUGIN_ROOT}/scripts/analyze-traffic.py \
 ```bash
 npx @playwright/cli@latest -s=<app> close
 
-# Mark capture complete
+# Mark the capture checkpoint AND the pipeline phase complete
 python ${CLAUDE_PLUGIN_ROOT}/scripts/capture-checkpoint.py update <app> --step complete
+python ${CLAUDE_PLUGIN_ROOT}/scripts/phase-state.py complete <app> --phase capture \
+  --output traffic-capture/raw-traffic.json
 ```
 
 ---
@@ -431,3 +407,4 @@ See `references/` for:
 - `protection-detection.md` — anti-bot escalation ladder (curl_cffi → camoufox → hybrid)
 - `api-discovery.md` — protocol priority chain, decision tree
 - `exploration-checklists.md` — per-profile capture targets with concrete numbers
+- `mitmproxy-mode.md` — step substitutions for `--mitmproxy` capture

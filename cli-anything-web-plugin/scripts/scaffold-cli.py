@@ -390,15 +390,17 @@ def scaffold(
         render_template("output.py.tpl", variables),
     )
 
-    # repl_skin.py (copy from scripts/)
-    repl_skin_src = SCRIPT_DIR / "repl_skin.py"
-    if repl_skin_src.exists():
-        repl_skin_dst = utils_dir / "repl_skin.py"
-        repl_skin_dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(repl_skin_src, repl_skin_dst)
-        print(f"  Copied:  {repl_skin_dst}")
-    else:
-        print(f"  WARNING: repl_skin.py not found at {repl_skin_src}")
+    # Vendored shared runtime files (canonical source: cli-web-core, kept in
+    # sync here by `cli-web-devkit resync` so the plugin works standalone).
+    for vendored in ("repl_skin.py", "mcp_server.py", "doctor.py"):
+        vendored_src = SCRIPT_DIR / vendored
+        if vendored_src.exists():
+            vendored_dst = utils_dir / vendored
+            vendored_dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(vendored_src, vendored_dst)
+            print(f"  Copied:  {vendored_dst}")
+        else:
+            print(f"  WARNING: {vendored} not found at {vendored_src}")
 
     # ── 6. commands/ ───────────────────────────────────────────────────────
     write_file(commands_dir / "__init__.py", "")
@@ -490,17 +492,17 @@ Examples:
   # REST API with httpx, cookie auth
   python scaffold-cli.py hackernews/agent-harness \\
     --app-name hackernews --protocol rest --http-client httpx --auth-type cookie \\
-    --resources stories,users,search --resource stories --resource users
+    --resource stories --resource users --resource search
 
   # HTML scraping with curl_cffi, no auth
   python scaffold-cli.py gh-trending/agent-harness \\
     --app-name gh-trending --protocol html-scraping --http-client curl_cffi \\
-    --auth-type none --resources repos,developers
+    --auth-type none --resource repos --resource developers
 
   # Google batchexecute RPC with SSO
   python scaffold-cli.py notebooklm/agent-harness \\
     --app-name notebooklm --protocol batchexecute --http-client httpx \\
-    --auth-type google-sso --resources notebooks,sources,chat \\
+    --auth-type google-sso --resource notebooks --resource sources --resource chat \\
     --has-context --has-polling
         """,
     )
@@ -529,18 +531,19 @@ Examples:
         help="Authentication type",
     )
     parser.add_argument(
-        "--resources",
-        required=True,
-        help="Comma-separated resource names (e.g., stories,users,search)",
-    )
-    parser.add_argument(
         "--resource",
         action="append",
         default=[],
         dest="resource_modules",
         metavar="NAME",
-        help="Render a commands/<NAME>.py scaffold module (repeatable). "
-        "Registration is left to the agent (see FILL_IN marker in the CLI entry).",
+        help="Resource name (repeatable). Each renders a commands/<NAME>.py "
+        "scaffold module; registration is left to the agent (see FILL_IN "
+        "marker in the CLI entry). At least one resource is required.",
+    )
+    parser.add_argument(
+        "--resources",
+        default="",
+        help="Comma-separated alias for repeated --resource flags (e.g., stories,users,search).",
     )
     parser.add_argument(
         "--has-polling", action="store_true", help="Include polling/backoff helpers"
@@ -569,11 +572,17 @@ Examples:
             f"(generated Python packages cannot start with a digit)."
         )
 
-    resources = [r.strip() for r in args.resources.split(",") if r.strip()]
+    # --resource (repeatable) and --resources (comma alias) feed one list.
+    resources = list(args.resource_modules)
+    for chunk in args.resources.split(","):
+        name = chunk.strip()
+        if name and name not in resources:
+            resources.append(name)
     if not resources:
-        parser.error("--resources must not be empty; pass at least one resource name.")
+        parser.error("pass at least one resource name via --resource (or --resources).")
+    args.resource_modules = resources
 
-    # --resource values become Python module + function names.
+    # Resource values become Python module + function names.
     for resource in args.resource_modules:
         resource_underscore = to_underscore(resource)
         if (

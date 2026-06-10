@@ -5,6 +5,16 @@
 
 Complete syntax reference for every playwright-cli command used during capture.
 
+## Contents
+
+- CRITICAL: Execution Rules
+- Session Management
+- Navigation
+- Page Inspection
+- Interaction
+- Tracing (Traffic Capture)
+- Auth State
+
 ---
 
 ## CRITICAL: Execution Rules

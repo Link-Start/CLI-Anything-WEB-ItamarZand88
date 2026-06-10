@@ -38,8 +38,12 @@ SHARED_FILES: dict[str, str] = {
 }
 
 # Non-CLI vendored copies that must also track canon (relative to repo root).
+# The plugin keeps its own copies so scaffold-cli.py stays self-contained
+# when the plugin is installed outside this monorepo.
 EXTRA_VENDOR_TARGETS: dict[str, str] = {
     "cli-web-core/cli_web_core/repl_skin.py": "cli-anything-web-plugin/scripts/repl_skin.py",
+    "cli-web-core/cli_web_core/mcp_server.py": "cli-anything-web-plugin/scripts/mcp_server.py",
+    "cli-web-core/cli_web_core/doctor.py": "cli-anything-web-plugin/scripts/doctor.py",
 }
 
 

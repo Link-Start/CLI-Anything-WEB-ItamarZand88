@@ -128,3 +128,36 @@ def test_local_reference_links_exist(path: Path):
             continue
         resolved = (path.parent / target).resolve()
         assert resolved.exists(), f"{path.parent.name}: broken reference link {target!r}"
+
+
+# ── Reference-file rules (progressive disclosure) ───────────────────────────
+
+REFERENCE_FILES = sorted(
+    REPO_ROOT.glob("cli-anything-web-plugin/skills/*/references/*.md")
+) + sorted(REPO_ROOT.glob("cli-anything-web-plugin/skills/shared/*.md"))
+
+
+def test_reference_files_discovered():
+    assert len(REFERENCE_FILES) >= 15
+
+
+@pytest.mark.parametrize("path", REFERENCE_FILES, ids=lambda p: f"{p.parent.parent.name}/{p.name}")
+def test_long_reference_files_have_toc(path: Path):
+    """References >100 lines need a table of contents (partial-read safety)."""
+    text = path.read_text(encoding="utf-8")
+    if len(text.splitlines()) <= 100:
+        pytest.skip("under 100 lines")
+    head = "\n".join(text.splitlines()[:30]).lower()
+    assert "## contents" in head, f"{path.name}: >100 lines but no '## Contents' TOC near the top"
+
+
+@pytest.mark.parametrize("path", REFERENCE_FILES, ids=lambda p: f"{p.parent.parent.name}/{p.name}")
+def test_references_stay_one_level_deep(path: Path):
+    """Reference files must not link to other reference files (nested chains)."""
+    if path.parent.name == "shared":
+        pytest.skip("shared specs are linked from many places by design")
+    text = path.read_text(encoding="utf-8")
+    nested = re.findall(r"\]\((?:\./)?references/[^)]+\)|`references/[^`]+\.md`", text)
+    assert not nested, (
+        f"{path.name}: links to other references {nested} — keep chains one level deep"
+    )
