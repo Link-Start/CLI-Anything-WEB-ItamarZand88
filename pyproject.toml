@@ -29,7 +29,7 @@ ignore = [
     # CLI entry points and pipeline scripts intentionally run code before
     # imports (sys.stdout UTF-8 reconfigure, sys.path setup for sibling
     # modules). Tracked as ratchet debt until the devkit package migration
-    # (docs/REFACTORING-PLAN.md Pillar 2) removes the need.
+    # removes the need.
     "E402",
 ]
 

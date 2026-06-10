@@ -76,9 +76,11 @@ Casing is derived inside the templates via Jinja2 filters — you only supply
 | `README.md.tpl` | `cli_web/<app>/README.md` skeleton | always |
 | `SKILL.md.tpl` | per-CLI skill skeleton | always (filled in during Phase 4) |
 
-Also produced by the script (not templates): `__init__.py` files, vendored
-`utils/repl_skin.py` (canonical source `cli-web-core/cli_web_core/repl_skin.py`,
-synced by `cli-web-devkit resync`), `utils/config.py`, and **`.manifest.json`**
+Also produced by the script (not templates): `__init__.py` files, the vendored
+runtime adapters `utils/repl_skin.py`, `utils/doctor.py`, and
+`utils/mcp_server.py` (canonical source `cli-web-core/cli_web_core/`, synced by
+`cli-web-devkit resync`; the entry point registers `doctor` + `mcp-serve` from
+them), `utils/config.py`, and **`.manifest.json`**
 at the harness root recording `template_version`, profile
 (protocol/http_client/auth), resources, and generation timestamp — fleet
 tooling (`cli-web-devkit drift`) depends on it.

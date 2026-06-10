@@ -305,9 +305,13 @@ tells you when to apply them during implementation.
   Empty fields in `--json` output = incomplete parser.
 - Entry point: `cli-web-<app>` via setup.py console_scripts (CONVENTIONS.md §Naming Conventions)
 - Namespace: `cli_web.*`
-- `utils/repl_skin.py` is vendored by scaffold-cli.py (canonical source:
-  `cli-web-core/cli_web_core/repl_skin.py`, synced via `cli-web-devkit resync`) —
-  never hand-edit the per-CLI copy
+- `utils/repl_skin.py`, `utils/doctor.py`, and `utils/mcp_server.py` are all
+  vendored by scaffold-cli.py (canonical source: `cli-web-core/cli_web_core/`,
+  synced via `cli-web-devkit resync`) — never hand-edit the per-CLI copies.
+  The entry point registers the fleet-standard `doctor` and `mcp-serve`
+  commands from the vendored adapters (`register_doctor_command(cli, ...)`,
+  `register_mcp_command(cli, ...)`); both derive from the Click tree, so no
+  per-command wiring is needed.
 - **`utils/helpers.py`** -- shared CLI helpers (generate for every CLI):
   - `resolve_partial_id(partial, items)` — prefix-match UUIDs for get/rename/delete
   - `handle_errors(json_mode)` — context manager replacing try/except in all commands
@@ -373,7 +377,8 @@ Phase B (parallel): Dispatch ALL independent work simultaneously
 
 Phase C (sequential): Wire everything together
   utils/helpers.py → <app>_cli.py → __main__.py → setup.py
-  (repl_skin.py was already vendored by scaffold-cli.py in Step B.0)
+  (repl_skin.py, doctor.py, mcp_server.py were already vendored by
+   scaffold-cli.py in Step B.0; the entry point registers doctor + mcp-serve)
 ```
 
 **Key parallelism rules:**

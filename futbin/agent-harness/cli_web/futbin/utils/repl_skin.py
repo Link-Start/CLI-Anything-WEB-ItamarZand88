@@ -4,9 +4,9 @@ CANONICAL SOURCE: cli-web-core/cli_web_core/repl_skin.py
 This file is vendored into every generated CLI at
     cli_web/<app>/utils/repl_skin.py
 by `cli-web-devkit resync` / scaffold-cli.py. Do not edit vendored copies
-by hand — change the canonical source and resync (see docs/REFACTORING-PLAN.md
-Pillar 4.4). App-specific needs are covered by constructor parameters
-(`display_name`, `accent`), not by editing this file.
+by hand — change the canonical source and resync. App-specific needs are
+covered by constructor parameters (`display_name`, `accent`), not by
+editing this file.
 
 Usage:
     from cli_web.<app>.utils.repl_skin import ReplSkin
