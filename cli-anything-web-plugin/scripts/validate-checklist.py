@@ -58,10 +58,15 @@ TIER1_CHECKS: frozenset[str] = frozenset(
         "3.3",
         "3.8",
         "3.9",
-        # 4. Core Modules — exception hierarchy + status mapping + rpc structure
+        # 4. Core Modules — exception hierarchy + status mapping + rpc structure,
+        # plus auth security (retry contract, headless refresh, chmod 600):
+        # CLAUDE.md mandates these, so they must block publish.
         "4.1",
         "4.2",
         "4.3",
+        "4.4",
+        "4.4b",
+        "4.6",
         "4.7",
         # 7. Packaging — namespace packages, name, entry point
         "7.1",
@@ -358,11 +363,15 @@ class Validator:
         else:
             auth_path = self.pkg_dir / "core" / "auth.py"
             auth_content = auth_path.read_text(encoding="utf-8") if auth_path.exists() else ""
-            has_refresh_fn = "refresh_auth" in auth_content or "refresh_token" in auth_content
-            has_client_call = (
-                "refresh_auth" in client_content
-                or "refresh_token" in client_content
-                or "_refresh_via_browser" in client_content
+            # Accept the documented name (refresh_auth) plus the refresh
+            # spellings used across the fleet (_refresh_tokens, refresh_token,
+            # a headless-capable login_browser the client can re-invoke).
+            refresh_names = ("refresh_auth", "refresh_token", "_refresh_tokens")
+            has_refresh_fn = any(n in auth_content for n in refresh_names) or (
+                "login_browser" in auth_content and "headed" in auth_content
+            )
+            has_client_call = any(
+                n in client_content for n in (*refresh_names, "_refresh_via_browser")
             )
             if has_refresh_fn and has_client_call:
                 r.pass_("auth.py has refresh + client calls it on 401/403")

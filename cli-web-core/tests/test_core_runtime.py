@@ -121,6 +121,15 @@ def test_poll_returns_result_with_backoff():
     assert sleeps == [2, 3.0, 4.5]  # exponential, not fixed
 
 
+def test_poll_falsy_result_completes():
+    # 0 / [] / {} are valid completed payloads — only None means "keep waiting"
+    attempts = iter([None, 0])
+    result = poll_until_complete(
+        lambda: next(attempts), timeout=100, initial_delay=2, sleep=lambda _: None
+    )
+    assert result == 0
+
+
 def test_poll_times_out_with_app_error():
     with pytest.raises(AppError, match="timed out"):
         poll_until_complete(lambda: None, timeout=5, initial_delay=2, sleep=lambda _: None)

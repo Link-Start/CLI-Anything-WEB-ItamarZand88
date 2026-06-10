@@ -136,9 +136,10 @@ without parsing output (canonical map: `cli_web_core.exceptions`):
 mapping automatically — newly generated CLIs get this for free.
 
 > **Fleet note:** CLIs generated before template v2.1 exit 1 for domain
-> errors and 2 for unexpected errors. Changing their observable exit codes
-> is a breaking change — they adopt this contract at their next
-> coordinated major release, not via resync.
+> errors and 1 or 2 for unexpected errors (varies by CLI — do not branch
+> on exit 2 against them). Changing their observable exit codes is a
+> breaking change — they adopt this contract at their next coordinated
+> major release, not via resync.
 
 ---
 

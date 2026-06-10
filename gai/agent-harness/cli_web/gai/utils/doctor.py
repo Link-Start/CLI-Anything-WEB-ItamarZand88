@@ -105,17 +105,18 @@ def _check_auth(app_name: str, pkg: str) -> list[DoctorCheck]:
         return checks
 
     checks.append(DoctorCheck("auth file", "ok", str(auth_file)))
-    mode = stat.S_IMODE(auth_file.stat().st_mode)
-    if mode & 0o077:
-        checks.append(
-            DoctorCheck(
-                "auth file permissions",
-                "warn",
-                f"{oct(mode)} — should be 600; run: chmod 600 {auth_file}",
+    if os.name == "posix":  # st_mode permission bits are meaningless on Windows
+        mode = stat.S_IMODE(auth_file.stat().st_mode)
+        if mode & 0o077:
+            checks.append(
+                DoctorCheck(
+                    "auth file permissions",
+                    "warn",
+                    f"{oct(mode)} — should be 600; run: chmod 600 {auth_file}",
+                )
             )
-        )
-    else:
-        checks.append(DoctorCheck("auth file permissions", "ok", oct(mode)))
+        else:
+            checks.append(DoctorCheck("auth file permissions", "ok", oct(mode)))
     try:
         json.loads(auth_file.read_text(encoding="utf-8"))
         checks.append(DoctorCheck("auth file format", "ok", "valid JSON"))
@@ -155,8 +156,12 @@ def register_doctor_command(cli: Any, app_name: str, pkg: str | None = None) -> 
 
     @cli.command("doctor")
     @click.option("--json", "json_mode", is_flag=True, help="Output as JSON.")
-    def doctor(json_mode: bool) -> None:
+    @click.pass_context
+    def doctor(ctx: Any, json_mode: bool) -> None:
         """Diagnose this CLI's local setup (install, auth, dependencies)."""
+        if not json_mode:  # honor the group-level --json flag (ctx.obj["json"])
+            obj = ctx.find_root().obj
+            json_mode = bool(obj.get("json")) if isinstance(obj, dict) else False
         checks = run_doctor(app_name, resolved_pkg)
         failed = [c for c in checks if c.status == "fail"]
         if json_mode:

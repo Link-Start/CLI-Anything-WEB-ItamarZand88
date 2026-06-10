@@ -43,17 +43,36 @@ class CanaryReport:
         }
 
 
-def _check_envelope(stdout: str) -> str | None:
-    """Return an error description, or None if the envelope is valid."""
+def _parse_json_output(stdout: str) -> object:
+    """Parse CLI --json output, tolerating leading spinner/log noise."""
     try:
-        payload = json.loads(stdout)
+        return json.loads(stdout)
+    except json.JSONDecodeError:
+        pass
+    lines = stdout.splitlines()
+    for i, line in enumerate(lines):
+        if line.lstrip().startswith(("{", "[")):
+            return json.loads("\n".join(lines[i:]))
+    raise json.JSONDecodeError("no JSON object found", stdout, 0)
+
+
+def _check_envelope(stdout: str) -> str | None:
+    """Return an error description, or None if the output is healthy.
+
+    Pre-v2.1 fleet CLIs emit bare JSON arrays/objects rather than the
+    ``{"success": true, "data": ...}`` envelope (CONVENTIONS.md §Exit Codes
+    fleet note); the canary asks "is the site still serving us data", so any
+    valid JSON that is not an error envelope counts as healthy.
+    """
+    try:
+        payload = _parse_json_output(stdout)
     except json.JSONDecodeError as exc:
         return f"output is not JSON: {exc}"
     if not isinstance(payload, dict):
-        return f"JSON output is not an object: {type(payload).__name__}"
+        return None  # legacy bare-array output
     if payload.get("error"):
         return f"CLI returned error envelope: {payload.get('code')}: {payload.get('message')}"
-    if payload.get("success") is not True or "data" not in payload:
+    if "success" in payload and (payload.get("success") is not True or "data" not in payload):
         return f"not a success envelope: keys={sorted(payload)}"
     return None
 

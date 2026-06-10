@@ -14,7 +14,8 @@ Every check is marked **[T1]** or **[T2]**:
 
 - **[T1] Tier 1 — Critical.** ANY Tier 1 failure blocks publish. Covers
   directory structure, required files, exception/error handling, the `--json`
-  envelope, REPL basics, and packaging entry points (~35 checks).
+  envelope, REPL basics, packaging entry points, and auth security
+  (retry contract, headless refresh, chmod 600) (~38 checks).
 - **[T2] Tier 2 — Comprehensive.** Must-fix before the CLI is considered
   polished, but a Tier 2 failure alone does not block publish (it is reported
   as a warning; `--strict` mode escalates it).
@@ -64,13 +65,13 @@ critical/comprehensive) and supports `--tier1-only` for fail-fast validation.
 ### 4. Core Modules (8 checks)
 
 - **[T2]** `client.py`: centralized auth header injection, exponential backoff, JSON parsing
-- **[T2]** `auth.py`: login, refresh, expiry check, secure storage (chmod 600)
+- **[T1]** `auth.py`: login, refresh, expiry check, secure storage (chmod 600)
 - **[T2]** `session.py`: Session class with undo/redo stack (only if the CLI has stateful operations; N/A for stateless CLIs)
 - **[T2]** `models.py`: typed response models
 - **[T1]** If protocol is non-REST: `core/rpc/` exists with `types.py`, `encoder.py`, `decoder.py`
 - **[T1]** `core/exceptions.py`: domain-specific exception hierarchy (CONVENTIONS.md §Exception Hierarchy)
 - **[T1]** `client.py` maps HTTP status codes to typed exceptions (401→AuthError, 404→NotFoundError, 429→RateLimitError, 5xx→ServerError)
-- **[T2]** Auth retry: client runs the 3-attempt auto-refresh on recoverable AuthError (current cookies -> reload auth.json -> browser refresh), never more (CONVENTIONS.md §Auth Rules)
+- **[T1]** Auth retry: client runs the 3-attempt auto-refresh on recoverable AuthError (current cookies -> reload auth.json -> browser refresh), never more (CONVENTIONS.md §Auth Rules)
 
 ### 5. Test Standards (8 checks — all Tier 2)
 

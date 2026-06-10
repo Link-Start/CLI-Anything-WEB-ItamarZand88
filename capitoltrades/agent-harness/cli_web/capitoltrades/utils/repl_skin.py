@@ -145,12 +145,14 @@ class ReplSkin:
         self.version = version
         self.accent = accent or _ACCENT_COLORS.get(self.app, _DEFAULT_ACCENT)
 
-        # History file
+        # History file path. The directory is created lazily in
+        # create_prompt_session() — CLIs construct ReplSkin at module import
+        # time, and one-shot commands must not pay (or fail on) filesystem
+        # writes they never use.
         if history_file is None:
             from pathlib import Path
 
             hist_dir = Path.home() / f".cli-web-{self.app}"
-            hist_dir.mkdir(parents=True, exist_ok=True)
             self.history_file = str(hist_dir / "history")
         else:
             self.history_file = history_file
@@ -395,14 +397,22 @@ class ReplSkin:
     def create_prompt_session(self):
         """Create a prompt_toolkit PromptSession with skin styling."""
         try:
+            from pathlib import Path
+
             from prompt_toolkit import PromptSession
             from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-            from prompt_toolkit.history import FileHistory
+            from prompt_toolkit.history import FileHistory, InMemoryHistory
 
             style = self.get_prompt_style()
 
+            try:
+                Path(self.history_file).parent.mkdir(parents=True, exist_ok=True)
+                history = FileHistory(self.history_file)
+            except OSError:  # read-only HOME — run without persistent history
+                history = InMemoryHistory()
+
             session = PromptSession(
-                history=FileHistory(self.history_file),
+                history=history,
                 auto_suggest=AutoSuggestFromHistory(),
                 style=style,
                 enable_history_search=True,
@@ -464,4 +474,13 @@ _ANSI_256_TO_HEX = {
     "\033[38;5;240m": "#585858",  # github
     "\033[38;5;213m": "#ff87ff",  # figma
     "\033[38;5;196m": "#ff0000",  # asana
+    # Fleet apps
+    "\033[38;5;197m": "#ff005f",  # airbnb
+    "\033[38;5;32m": "#0087d7",  # linkedin
+    "\033[38;5;202m": "#ff5f00",  # reddit
+    "\033[38;5;36m": "#00af87",  # pexels
+    "\033[38;5;209m": "#ff875f",  # producthunt
+    "\033[38;5;26m": "#005fd7",  # booking
+    "\033[38;5;70m": "#5faf00",  # futbin
+    "\033[38;5;30m": "#008787",  # capitoltrades
 }

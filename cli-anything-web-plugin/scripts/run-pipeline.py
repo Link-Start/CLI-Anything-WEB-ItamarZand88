@@ -143,12 +143,16 @@ def cmd_validate(args: argparse.Namespace) -> None:
     """Scriptable Phase-4 tail: validate-checklist + smoke-test."""
     scripts = get_scripts_dir()
     app_dir = Path(args.app_dir).resolve()
+    harness_dir = app_dir / "agent-harness" if (app_dir / "agent-harness").is_dir() else app_dir
+    app_name = app_dir.parent.name if app_dir.name == "agent-harness" else app_dir.name
 
     rc = _run(
         [
             sys.executable,
             str(scripts / "validate-checklist.py"),
-            str(app_dir),
+            str(harness_dir),
+            "--app-name",
+            app_name,
         ]
     )
     if rc != 0 and not args.keep_going:

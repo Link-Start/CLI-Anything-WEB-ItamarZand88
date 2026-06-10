@@ -18,9 +18,22 @@ def test_check_envelope_rejects_error_envelope():
     assert problem is not None and "NETWORK_ERROR" in problem
 
 
-def test_check_envelope_rejects_bare_array():
-    problem = _check_envelope("[1, 2, 3]")
-    assert problem is not None and "not an object" in problem
+def test_check_envelope_accepts_legacy_bare_array():
+    # Pre-v2.1 fleet CLIs print bare JSON arrays/objects, not the envelope.
+    assert _check_envelope("[1, 2, 3]") is None
+
+
+def test_check_envelope_accepts_legacy_object_without_envelope():
+    assert _check_envelope('{"items": [1, 2]}') is None
+
+
+def test_check_envelope_rejects_false_success():
+    problem = _check_envelope('{"success": false}')
+    assert problem is not None and "not a success envelope" in problem
+
+
+def test_check_envelope_tolerates_leading_noise():
+    assert _check_envelope('Fetching...\n{"success": true, "data": []}') is None
 
 
 def test_check_envelope_rejects_non_json():

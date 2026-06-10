@@ -35,6 +35,14 @@ def demo_cli():
         """Always fails."""
         raise click.ClickException("kaput")
 
+    @cli.command("search")
+    @click.argument("query", nargs=-1, required=True)
+    @click.option("--tag", multiple=True, help="Filter tag (repeatable)")
+    @click.option("--json", "json_mode", is_flag=True)
+    def search(query, tag, json_mode):
+        """Search things."""
+        click.echo(json.dumps({"success": True, "data": {"query": list(query), "tags": list(tag)}}))
+
     register_mcp_command(cli, app_name="demo", version="9.9.9")
     return cli
 
@@ -59,7 +67,7 @@ def test_notifications_are_silent(server):
 def test_tools_list_derives_from_click_tree(server):
     resp = server.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
     tools = {t["name"]: t for t in resp["result"]["tools"]}
-    assert set(tools) == {"things_list", "things_get", "boom"}
+    assert set(tools) == {"things_list", "things_get", "boom", "search"}
 
     list_tool = tools["things_list"]
     assert list_tool["description"] == "List things."
@@ -131,3 +139,28 @@ def test_unknown_tool_and_method(server):
 
 def test_register_adds_command(demo_cli):
     assert "mcp-serve" in demo_cli.commands
+
+def test_multi_value_params_schema(server):
+    resp = server.handle({"jsonrpc": "2.0", "id": 8, "method": "tools/list"})
+    search = next(t for t in resp["result"]["tools"] if t["name"] == "search")
+    props = search["inputSchema"]["properties"]
+    assert props["query"] == {"type": "array", "items": {"type": "string"}}
+    assert props["tag"]["type"] == "array"
+
+
+def test_multi_value_params_call(server):
+    resp = server.handle(
+        {
+            "jsonrpc": "2.0",
+            "id": 9,
+            "method": "tools/call",
+            "params": {
+                "name": "search",
+                "arguments": {"query": ["python", "tutorial"], "tag": ["a", "b"]},
+            },
+        }
+    )
+    assert resp["result"]["isError"] is False
+    payload = json.loads(resp["result"]["content"][0]["text"])
+    assert payload["data"]["query"] == ["python", "tutorial"]
+    assert payload["data"]["tags"] == ["a", "b"]

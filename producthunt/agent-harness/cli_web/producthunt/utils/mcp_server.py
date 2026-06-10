@@ -34,16 +34,22 @@ _CLICK_TYPE_MAP = {
 }
 
 
+def _is_multi_valued(param: Any) -> bool:
+    return bool(getattr(param, "multiple", False)) or getattr(param, "nargs", 1) != 1
+
+
 def _param_schema(param: Any) -> dict[str, Any]:
     type_name = getattr(param.type, "name", "text") or "text"
     json_type = _CLICK_TYPE_MAP.get(type_name.lower(), "string")
     schema: dict[str, Any] = {"type": json_type}
-    help_text = getattr(param, "help", None)
-    if help_text:
-        schema["description"] = help_text
     choices = getattr(param.type, "choices", None)
     if choices:
         schema["enum"] = list(choices)
+    if _is_multi_valued(param):
+        schema = {"type": "array", "items": schema}
+    help_text = getattr(param, "help", None)
+    if help_text:
+        schema["description"] = help_text
     return schema
 
 
@@ -102,11 +108,15 @@ def _build_argv(
         value = arguments[param.name]
         if value is None:
             continue
+        values = list(value) if isinstance(value, (list, tuple)) else [value]
         if isinstance(param, click.Argument):
-            argv.append(str(value))
+            argv.extend(str(v) for v in values)
         elif getattr(param, "is_flag", False):
             if value:
                 argv.append(param.opts[0])
+        elif _is_multi_valued(param):
+            for v in values:
+                argv.extend([param.opts[0], str(v)])
         else:
             argv.extend([param.opts[0], str(value)])
     if json_flag:

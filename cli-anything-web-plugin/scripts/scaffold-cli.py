@@ -392,15 +392,21 @@ def scaffold(
 
     # Vendored shared runtime files (canonical source: cli-web-core, kept in
     # sync here by `cli-web-devkit resync` so the plugin works standalone).
+    # The generated entry point imports all three unconditionally, so a
+    # missing source must abort the scaffold rather than ship a CLI that
+    # dies with ModuleNotFoundError on every invocation.
     for vendored in ("repl_skin.py", "mcp_server.py", "doctor.py"):
         vendored_src = SCRIPT_DIR / vendored
-        if vendored_src.exists():
-            vendored_dst = utils_dir / vendored
-            vendored_dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(vendored_src, vendored_dst)
-            print(f"  Copied:  {vendored_dst}")
-        else:
-            print(f"  WARNING: {vendored} not found at {vendored_src}")
+        if not vendored_src.exists():
+            sys.exit(
+                f"ERROR: {vendored} not found at {vendored_src} — "
+                f"plugin install is incomplete; reinstall the plugin or run "
+                f"`cli-web-devkit resync`"
+            )
+        vendored_dst = utils_dir / vendored
+        vendored_dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(vendored_src, vendored_dst)
+        print(f"  Copied:  {vendored_dst}")
 
     # ── 6. commands/ ───────────────────────────────────────────────────────
     write_file(commands_dir / "__init__.py", "")

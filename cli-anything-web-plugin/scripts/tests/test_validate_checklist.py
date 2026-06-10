@@ -250,11 +250,11 @@ def test_summary_includes_per_tier_counts(scaffolded_harness):
 def test_known_tier_assignments(scaffolded_harness):
     """Spot-check the tier registry against quality-checklist.md markers."""
     report = _validate(scaffolded_harness, "vcapp")
-    # Tier 1: directory structure, required files, --json flag, packaging entry point
-    for check_id in ("1.3", "2.3", "3.2", "7.3", "9.1", "10.4"):
+    # Tier 1: structure, required files, --json flag, packaging, auth security
+    for check_id in ("1.3", "2.3", "3.2", "4.4", "4.6", "7.3", "9.1", "10.4"):
         assert _check(report, check_id)["severity"] == "critical", check_id
-    # Tier 2: auth retry nuances, test standards, env var
-    for check_id in ("4.4", "5.2", "10.3"):
+    # Tier 2: test standards, env var
+    for check_id in ("5.2", "10.3"):
         assert _check(report, check_id)["severity"] == "comprehensive", check_id
 
 

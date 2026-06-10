@@ -27,7 +27,7 @@ class AuthError(AppError):
 
     Args:
         recoverable: If True, client should run the 3-attempt auto-refresh
-                     (see HARNESS.md "Token Auto-Refresh").
+                     (see CONVENTIONS.md §Auth Rules).
                      If False (e.g., cookies deleted), user must re-login.
     """
 

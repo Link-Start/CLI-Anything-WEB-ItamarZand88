@@ -20,10 +20,11 @@ def poll_until_complete(
     backoff_factor: float = 1.5,
     sleep: Callable[[float], None] = time.sleep,
 ) -> T:
-    """Poll ``check_fn`` with exponential backoff until it returns truthy.
+    """Poll ``check_fn`` with exponential backoff until it returns non-None.
 
     Args:
-        check_fn: Returns a result (truthy = done) or None/falsy (keep waiting).
+        check_fn: Returns the result when done (any value, including falsy
+            ones like 0 or []) or None to keep waiting.
         timeout: Maximum total wait in seconds.
         initial_delay: First sleep interval.
         max_delay: Cap on the sleep interval.
@@ -37,7 +38,7 @@ def poll_until_complete(
     delay = initial_delay
     while elapsed < timeout:
         result = check_fn()
-        if result:
+        if result is not None:
             return result
         sleep(delay)
         elapsed += delay

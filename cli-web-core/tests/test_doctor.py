@@ -36,6 +36,21 @@ def test_doctor_json_envelope(demo_cli):
     assert "python" in names and "config dir" in names
 
 
+def test_doctor_honors_group_level_json_flag():
+    @click.group()
+    @click.option("--json", "json_mode", is_flag=True)
+    @click.pass_context
+    def cli(ctx, json_mode):
+        """Demo CLI with a group-level --json flag."""
+        ctx.ensure_object(dict)
+        ctx.obj["json"] = json_mode
+
+    register_doctor_command(cli, app_name="demo-doctor-test")
+    result = CliRunner().invoke(cli, ["--json", "doctor"])
+    payload = json.loads(result.output)
+    assert payload["success"] is True
+
+
 def test_run_doctor_no_auth_module_is_ok():
     checks = {c.name: c for c in run_doctor("demo-doctor-test", "demo_doctor_test")}
     assert checks["auth"].status == "ok"
