@@ -42,29 +42,39 @@ def test_run_doctor_no_auth_module_is_ok():
     assert "public site" in checks["auth"].detail
 
 
-def test_run_doctor_auth_cli_warns_without_auth_file(monkeypatch, tmp_path):
+@pytest.fixture()
+def auth_cli(monkeypatch):
+    """Force the auth-bearing code path without requiring an installed CLI.
+
+    The real check probes `cli_web.<pkg>.core.auth` via importlib — true only
+    when a fleet CLI happens to be installed. Tests must not depend on that.
+    """
+    monkeypatch.setattr("cli_web_core.doctor._has_auth_module", lambda pkg: True)
+
+
+def test_run_doctor_auth_cli_warns_without_auth_file(monkeypatch, tmp_path, auth_cli):
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.delenv("CLI_WEB_LINKEDIN_AUTH_JSON", raising=False)
-    checks = {c.name: c for c in run_doctor("linkedin", "linkedin")}
+    monkeypatch.delenv("CLI_WEB_FAKEAPP_AUTH_JSON", raising=False)
+    checks = {c.name: c for c in run_doctor("fakeapp", "fakeapp")}
     assert checks["auth file"].status == "warn"
     assert "auth login" in checks["auth file"].detail
 
 
-def test_run_doctor_env_var_short_circuits(monkeypatch):
-    monkeypatch.setenv("CLI_WEB_LINKEDIN_AUTH_JSON", '{"li_at": "x"}')
-    checks = {c.name: c for c in run_doctor("linkedin", "linkedin")}
+def test_run_doctor_env_var_short_circuits(monkeypatch, auth_cli):
+    monkeypatch.setenv("CLI_WEB_FAKEAPP_AUTH_JSON", '{"token": "x"}')
+    checks = {c.name: c for c in run_doctor("fakeapp", "fakeapp")}
     assert checks["auth source"].status == "ok"
 
 
-def test_run_doctor_flags_world_readable_auth(monkeypatch, tmp_path):
+def test_run_doctor_flags_world_readable_auth(monkeypatch, tmp_path, auth_cli):
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.delenv("CLI_WEB_LINKEDIN_AUTH_JSON", raising=False)
-    cfg = tmp_path / ".config" / "cli-web-linkedin"
+    monkeypatch.delenv("CLI_WEB_FAKEAPP_AUTH_JSON", raising=False)
+    cfg = tmp_path / ".config" / "cli-web-fakeapp"
     cfg.mkdir(parents=True)
     auth = cfg / "auth.json"
-    auth.write_text('{"li_at": "x"}')
+    auth.write_text('{"token": "x"}')
     auth.chmod(0o644)
-    checks = {c.name: c for c in run_doctor("linkedin", "linkedin")}
+    checks = {c.name: c for c in run_doctor("fakeapp", "fakeapp")}
     assert checks["auth file"].status == "ok"
     assert checks["auth file permissions"].status == "warn"
     assert "chmod 600" in checks["auth file permissions"].detail

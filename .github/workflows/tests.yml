@@ -45,11 +45,14 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install test tooling
-        run: pip install pytest pytest-cov mypy
-      - name: Plugin script & devkit tests (with coverage)
+        # jinja2: required by scaffold-cli.py (template engine) — the golden
+        # tests scaffold every profile combination. click: required by the
+        # cli-web-core mcp_server/doctor test suites.
+        run: pip install pytest pytest-cov mypy jinja2 click
+      - name: Plugin script, devkit & core tests (with coverage)
         run: |
           python -m pytest cli-anything-web-plugin/scripts/tests devkit/tests \
-            --cov --cov-report=term-missing
+            cli-web-core/tests --cov --cov-report=term-missing
       - name: Mypy (devkit & core packages)
         run: mypy
 
