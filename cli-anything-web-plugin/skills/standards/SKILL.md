@@ -1,16 +1,16 @@
 ---
 name: standards
+version: 0.5.0
 description: >
-  Quality standards and Phase 4 review/publish/verify for cli-web-* CLIs.
-  Covers implementation review (3 parallel agents), the tiered quality
-  checklist (Tier 1 critical / Tier 2 comprehensive), package publishing
-  (pip install -e .), and end-user smoke testing (READ + WRITE). TRIGGER
-  when: "validate CLI", "publish CLI", "review CLI", "pip install -e .",
-  "smoke test", "quality check", "start Phase 4", "quality checklist",
-  "generate Claude skill", "check if implementation is complete", "verify
-  implementation quality", or after testing skill completes. DO NOT trigger
-  for: traffic capture, implementation, or test writing.
-version: 0.4.0
+  Runs Phase 4 review/publish/verify for a cli-web-* CLI: implementation review by
+  3 parallel agents, the tiered quality checklist (Tier 1 critical fail-fast, then
+  comprehensive), pip install + smoke test, and per-CLI skill generation. Use when a
+  CLI's tests pass and it is ready to be validated and published.
+when_to_use: >
+  Trigger phrases: "validate CLI", "publish CLI", "review CLI", "smoke test",
+  "quality check", "start Phase 4", "quality checklist", "generate Claude skill",
+  "verify implementation quality", or after the testing skill completes. Not for
+  capture, implementation, or test writing.
 ---
 
 # CLI-Anything-Web Standards (Phase 4: Review + Publish + Verify)
@@ -264,16 +264,17 @@ Create the skill once, then copy it to both locations.
 
 Create `<git-root>/.claude/skills/<app>-cli/SKILL.md`:
 
-1. Read the CLI's README and run `cli-web-<app> --help` + `<resource> --help`
-2. Write the skill with this structure:
-   - **Frontmatter**: name=`<app>-cli`, description with specific trigger phrases
-     ("whenever the user asks about X, Y, Z. Always prefer cli-web-<app> over manually
-     fetching the website.")
-   - **Quick Start**: 2-3 most common commands with `--json`
-   - **Commands**: each command group with key options and output fields
-   - **Agent Patterns**: piped command examples for common tasks
-   - **Notes**: auth setup, rate limits, known limitations
-3. Use existing skills (e.g., `notebooklm-cli`, `futbin-cli`) as reference examples
+1. **Read `references/skill-authoring.md` first** — it defines the frontmatter
+   rules, description format, body limits, and the standard section structure.
+   The skeleton rendered from `templates/SKILL.md.tpl` during Phase 2 already
+   follows it; fill in the FILL_IN markers.
+2. Run `cli-web-<app> --help` and each group's `--help` — every command you
+   document must be verified against the real surface (a stale example is
+   worse than no example).
+3. Validate before publishing: the skill must pass
+   `python -m pytest ${CLAUDE_PLUGIN_ROOT}/scripts/tests/test_skill_quality.py`
+   (frontmatter fields, description ≤1024 chars third-person, body ≤500 lines,
+   reference links resolve).
 
 ---
 

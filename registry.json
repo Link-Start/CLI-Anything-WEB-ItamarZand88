@@ -143,7 +143,7 @@
       "directory": "booking/agent-harness",
       "namespace": "cli_web.booking",
       "commands": [
-        "search",
+        "search find",
         "get",
         "autocomplete",
         "auth login",

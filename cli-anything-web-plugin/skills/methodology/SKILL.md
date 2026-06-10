@@ -1,16 +1,16 @@
 ---
 name: methodology
+version: 0.3.0
 description: >
-  Analyze captured HTTP traffic, design CLI architecture, and implement the Python
-  CLI package. Covers Phase 2 of the pipeline: parse raw-traffic.json, identify
-  protocol type, map endpoints, design Click command groups, implement with parallel
-  subagents.
-  TRIGGER when: "analyze traffic", "design CLI", "implement CLI", "build CLI from
-  network traffic", "generate API wrapper", "reverse engineer web API", "start Phase 2",
-  raw-traffic.json exists and capture is complete, or after the capture skill finishes.
-  DO NOT trigger for: traffic recording (use capture), test writing (use testing),
-  or quality checks (use standards).
-version: 0.2.0
+  Analyzes captured HTTP traffic, designs the CLI architecture, and implements the
+  Python CLI package (Phase 2): parse raw-traffic.json, identify the protocol, write
+  api-spec.json, scaffold from templates, and implement endpoint methods and Click
+  command groups. Use after a capture completes and raw-traffic.json exists.
+when_to_use: >
+  Trigger phrases: "analyze traffic", "design CLI", "implement CLI", "build CLI from
+  network traffic", "generate API wrapper", "reverse engineer web API", "start
+  Phase 2", or after the capture skill finishes. Not for traffic recording (capture),
+  test writing (testing), or quality checks (standards).
 ---
 
 # CLI-Anything-Web Methodology (Phase 2)

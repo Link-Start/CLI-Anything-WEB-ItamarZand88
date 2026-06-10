@@ -1,15 +1,15 @@
 ---
 name: testing
+version: 0.3.0
 description: >
-  Write and document tests for cli-web-* CLIs. Covers writing the test suite
-  (unit + E2E + subprocess), documenting what is tested as you go, and recording
-  results in TEST.md.
-  TRIGGER when: "write tests for cli-web-*", "run tests", "start Phase 3", "create
-  TEST.md", "add E2E tests", "add subprocess tests", "test the CLI", "_resolve_cli",
-  or after methodology skill completes implementation.
-  DO NOT trigger for: traffic capture (use capture), implementation (use methodology),
-  or quality validation (use standards).
-version: 0.2.0
+  Writes and documents the test suite for a generated cli-web-* CLI (Phase 3): unit
+  tests with mocked HTTP, live E2E tests, subprocess tests via _resolve_cli, and the
+  TEST.md plan/results record. Use after the methodology skill completes
+  implementation.
+when_to_use: >
+  Trigger phrases: "write tests for cli-web-*", "start Phase 3", "create TEST.md",
+  "add E2E tests", "add subprocess tests", "test the CLI". Not for traffic capture,
+  implementation, or quality validation (standards).
 ---
 
 # CLI-Anything-Web Testing

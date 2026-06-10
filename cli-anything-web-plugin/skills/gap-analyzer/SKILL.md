@@ -1,15 +1,15 @@
 ---
 name: gap-analyzer
-version: 0.2.0
+version: 0.3.0
 description: >
-  Compare implemented CLI commands against the <APP>.md API map and
-  traffic-analysis.json to find missing endpoints, incomplete CRUD, dead
-  client methods, and priority gaps. Invoked as the MANDATORY FIRST STEP of
-  /cli-anything-web:refine; also available as an optional pre-review scan in
-  the standards skill. TRIGGER when: "gap analysis", "what's missing",
-  "coverage report", "what endpoints are not implemented", or as the first
-  step of the refine workflow.
-  DO NOT trigger for: "refine" alone (use the /cli-anything-web:refine command).
+  Compares a CLI's implemented commands against its APP.md API map and
+  traffic-analysis.json to find missing endpoints, incomplete CRUD, dead client
+  methods, and priority gaps. Runs as the mandatory first step of
+  /cli-anything-web:refine and as an optional pre-review scan in standards.
+when_to_use: >
+  Trigger phrases: "gap analysis", "what's missing", "coverage report", "what
+  endpoints are not implemented". For "refine" alone, use the
+  /cli-anything-web:refine command (which invokes this skill first).
 ---
 
 # CLI Gap Analyzer

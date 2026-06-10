@@ -1,7 +1,11 @@
 ---
 name: boilerplate
-version: 1.0.0
-description: Procedural guide for scaffolding cli-web-* CLIs from the plugin's Jinja2 templates. Describes which template renders with which variables for each site profile. The scaffold-cli.py script (v2) is the primary path; this skill documents the template inventory and variable contract behind it.
+version: 1.1.0
+description: >
+  Documents the template inventory and variable contract behind scaffold-cli.py —
+  which Jinja2 template renders with which variables for each site profile. Use
+  during Phase 2 scaffolding when choosing scaffold flags or understanding what the
+  generated boilerplate contains. The scaffold-cli.py script is the primary path.
 user-invocable: false
 ---
 

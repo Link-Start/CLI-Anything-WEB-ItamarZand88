@@ -297,6 +297,36 @@ Once core exists, these land fleet-wide in one place: shell completion (Click's 
 - **`api-spec.json` not `.yaml`:** devkit is intentionally zero-dependency (runs in pre-commit/CI bare); JSON keeps it stdlib-parseable and the file is machine-written anyway.
 - **Handlebars templates were not dead:** they were referenced by standards/SKILL.md as manual starting points; they are now real Jinja2 templates (`README.md.tpl`, `SKILL.md.tpl`) rendered by scaffold v2.
 
+## Phase 6 (addendum) — Skills refactor to Anthropic best practices ✅ DONE
+
+All 26 skills in the repo (6 pipeline + 19 per-CLI + sync-check) were audited
+and refactored against Anthropic's official skill-authoring best practices and
+the Claude Code skills/frontmatter reference:
+
+- **Per-CLI skills**: rewritten to one standard structure (Commands → Examples →
+  JSON output → Auth → Utilities → Agent tips); every documented command/flag
+  verified against the installed CLI's `--help` (~150 invocation paths, dozens
+  of stale flags/examples fixed); descriptions rewritten third-person
+  "what + use when", trigger overflow moved to `when_to_use`; futbin split via
+  progressive disclosure (508→67 lines + TOC'd `market-playbook.md`);
+  `capitoltrades-cli` created (was missing despite README/registry links);
+  hackernews' silently-ignored `user_invocable` (underscore) fixed; `doctor` and
+  `mcp-serve` documented everywhere.
+- **Pipeline skills**: trigger lists moved from `description` into the
+  purpose-built `when_to_use` field; boilerplate description gained use-when
+  guidance.
+- **Durable enforcement**: `scripts/tests/test_skill_quality.py` (131 checks in
+  CI) validates every skill's frontmatter field names, description length/POV,
+  1536-char listing cap, 500-line body cap, and reference-link integrity;
+  `standards/references/skill-authoring.md` is the rubric Phase 4 follows when
+  generating new per-CLI skills; `SKILL.md.tpl` scaffolds the standard
+  structure.
+
+**Known follow-up (breaking, next major):** success-envelope adoption varies in
+older CLIs — several return bare data in `--json` success mode (the error
+envelope is universal). Skills document actual behavior; standardizing success
+envelopes fleet-wide belongs with the exit-code contract rollout.
+
 ---
 
 ## Appendix A — Defect/Drift Inventory (fix-list)

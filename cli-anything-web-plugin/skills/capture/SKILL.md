@@ -1,14 +1,16 @@
 ---
 name: capture
+version: 0.5.0
 description: >
-  Capture HTTP traffic from web apps using playwright-cli. Includes site fingerprinting
-  (framework detection, protection checks, iframe detection, auth detection, API discovery)
-  and full traffic recording with tracing and optional HAR output.
-  TRIGGER when: "record traffic from", "capture API calls from", "start Phase 1 for",
-  "analyze traffic from URL", "assess site", "site fingerprint", "start capture for",
-  "open browser for", or any URL is given as the first step of CLI generation.
-  DO NOT trigger for: Phase 2 implementation, test writing, or quality validation.
-version: 0.4.0
+  Captures HTTP traffic from a web app using playwright-cli — site fingerprinting
+  (framework, protections, auth, API discovery) plus full traffic recording into
+  raw-traffic.json. Use as Phase 1 of CLI generation whenever a target URL needs
+  its API surface recorded or assessed.
+when_to_use: >
+  Trigger phrases: "record traffic from", "capture API calls from", "start Phase 1",
+  "analyze traffic from URL", "assess site", "site fingerprint", "open browser for",
+  or any URL given as the first step of CLI generation. Not for Phase 2
+  implementation, test writing, or quality validation.
 ---
 
 # Traffic Capture (Phase 1)
