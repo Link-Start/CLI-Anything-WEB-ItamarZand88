@@ -67,7 +67,7 @@
       "package-name": "cli-web-futbin",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "notebooklm/agent-harness": {
       "release-type": "python",
@@ -75,7 +75,7 @@
       "package-name": "cli-web-notebooklm",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "gh-trending/agent-harness": {
       "release-type": "python",
@@ -83,7 +83,7 @@
       "package-name": "cli-web-gh-trending",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "producthunt/agent-harness": {
       "release-type": "python",
@@ -91,7 +91,7 @@
       "package-name": "cli-web-producthunt",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "unsplash/agent-harness": {
       "release-type": "python",
@@ -99,7 +99,7 @@
       "package-name": "cli-web-unsplash",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "booking/agent-harness": {
       "release-type": "python",
@@ -107,7 +107,7 @@
       "package-name": "cli-web-booking",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "stitch/agent-harness": {
       "release-type": "python",
@@ -115,7 +115,7 @@
       "package-name": "cli-web-stitch",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "pexels/agent-harness": {
       "release-type": "python",
@@ -123,7 +123,7 @@
       "package-name": "cli-web-pexels",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "reddit/agent-harness": {
       "release-type": "python",
@@ -131,7 +131,7 @@
       "package-name": "cli-web-reddit",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "gai/agent-harness": {
       "release-type": "python",
@@ -139,7 +139,7 @@
       "package-name": "cli-web-gai",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "youtube/agent-harness": {
       "release-type": "python",
@@ -147,7 +147,7 @@
       "package-name": "cli-web-youtube",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "hackernews/agent-harness": {
       "release-type": "python",
@@ -155,7 +155,7 @@
       "package-name": "cli-web-hackernews",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "codewiki/agent-harness": {
       "release-type": "python",
@@ -163,7 +163,7 @@
       "package-name": "cli-web-codewiki",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "chatgpt/agent-harness": {
       "release-type": "python",
@@ -171,7 +171,7 @@
       "package-name": "cli-web-chatgpt",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "airbnb/agent-harness": {
       "release-type": "python",
@@ -179,7 +179,7 @@
       "package-name": "cli-web-airbnb",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "amazon/agent-harness": {
       "release-type": "python",
@@ -187,7 +187,7 @@
       "package-name": "cli-web-amazon",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "tripadvisor/agent-harness": {
       "release-type": "python",
@@ -195,7 +195,7 @@
       "package-name": "cli-web-tripadvisor",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "linkedin/agent-harness": {
       "release-type": "python",
@@ -203,7 +203,7 @@
       "package-name": "cli-web-linkedin",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "capitoltrades/agent-harness": {
       "release-type": "python",
@@ -211,7 +211,7 @@
       "package-name": "cli-web-capitoltrades",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "worldcup/agent-harness": {
       "release-type": "python",
@@ -219,7 +219,7 @@
       "package-name": "cli-web-worldcup",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     },
     "meta": {
       "release-type": "python",
@@ -227,7 +227,7 @@
       "package-name": "cli-anything-web",
       "bump-minor-pre-major": true,
       "include-component-in-tag": true,
-      "release-as": "0.1.0"
+      "release-as": "0.1.1"
     }
   }
 }
