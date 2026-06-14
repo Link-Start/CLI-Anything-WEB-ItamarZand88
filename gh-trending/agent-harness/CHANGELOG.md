@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/ItamarZand88/CLI-Anything-WEB/compare/cli-web-gh-trending-v0.1.0...cli-web-gh-trending-v0.1.1) (2026-06-14)
+
+
+### Features
+
+* **gh-trending:** show the repo URL as a Link column in repos list ([e8db02c](https://github.com/ItamarZand88/CLI-Anything-WEB/commit/e8db02c108c2ee4e6cfa939d34918d85862bfe47))
+
 ## 0.1.0 (2026-06-14)
 
 

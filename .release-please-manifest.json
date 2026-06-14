@@ -1,10 +1,10 @@
 {
-  ".": "0.12.1",
+  ".": "0.13.0",
   "cli-web-core": "1.1.0",
   "devkit": "0.3.0",
   "futbin/agent-harness": "0.1.0",
   "notebooklm/agent-harness": "0.1.0",
-  "gh-trending/agent-harness": "0.1.0",
+  "gh-trending/agent-harness": "0.1.1",
   "producthunt/agent-harness": "0.1.1",
   "unsplash/agent-harness": "0.1.1",
   "booking/agent-harness": "0.1.0",

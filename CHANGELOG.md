@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.13.0](https://github.com/ItamarZand88/CLI-Anything-WEB/compare/v0.12.1...v0.13.0) (2026-06-14)
+
+
+### Features
+
+* **gh-trending:** show the repo URL as a Link column in repos list ([e8db02c](https://github.com/ItamarZand88/CLI-Anything-WEB/commit/e8db02c108c2ee4e6cfa939d34918d85862bfe47))
+
 ## [0.12.1](https://github.com/ItamarZand88/CLI-Anything-WEB/compare/v0.12.0...v0.12.1) (2026-06-14)
 
 
