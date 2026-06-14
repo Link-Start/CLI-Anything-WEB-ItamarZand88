@@ -47,74 +47,43 @@ class TestExceptionHierarchy:
 
 
 class TestClientErrorMapping:
-    def _mock_response(self, status_code, json_data=None, text="", headers=None):
-        resp = MagicMock()
-        resp.status_code = status_code
-        resp.text = text
-        resp.headers = headers or {}
-        if json_data is not None:
-            resp.json.return_value = json_data
-        return resp
+    """Status-code mapping in _get, with the browser transport (_navigate) mocked."""
 
-    @patch("cli_web.unsplash.core.client.curl_requests.Session")
-    def test_404_raises_not_found(self, mock_session_cls):
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-        mock_session.get.return_value = self._mock_response(404)
-
+    @patch.object(UnsplashClient, "_navigate")
+    def test_404_raises_not_found(self, mock_nav):
+        mock_nav.return_value = (404, "", {})
         client = UnsplashClient()
         with pytest.raises(NotFoundError):
             client.get_photo("nonexistent")
 
-    @patch("cli_web.unsplash.core.client.curl_requests.Session")
-    def test_429_raises_rate_limit(self, mock_session_cls):
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-        mock_session.get.return_value = self._mock_response(429, headers={"retry-after": "30"})
-
+    @patch.object(UnsplashClient, "_navigate")
+    def test_429_raises_rate_limit(self, mock_nav):
+        mock_nav.return_value = (429, "", {"retry-after": "30"})
         client = UnsplashClient()
         with pytest.raises(RateLimitError) as exc_info:
             client.search_photos("test")
         assert exc_info.value.retry_after == 30.0
 
-    @patch("cli_web.unsplash.core.client.curl_requests.Session")
-    def test_500_raises_server_error(self, mock_session_cls):
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-        mock_session.get.return_value = self._mock_response(500)
-
+    @patch.object(UnsplashClient, "_navigate")
+    def test_500_raises_server_error(self, mock_nav):
+        mock_nav.return_value = (500, "", {})
         client = UnsplashClient()
         with pytest.raises(ServerError) as exc_info:
             client.list_topics()
         assert exc_info.value.status_code == 500
 
-    @patch("cli_web.unsplash.core.client.curl_requests.Session")
-    def test_timeout_raises_network_error(self, mock_session_cls):
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-        mock_session.get.side_effect = ConnectionError("timeout")
-
+    def test_navigation_failure_raises_network_error(self):
+        # A browser navigation error is mapped to NetworkError.
         client = UnsplashClient()
+        client._page = MagicMock()
+        client._page.goto.side_effect = RuntimeError("navigation timeout")
         with pytest.raises(NetworkError):
             client.get_user("test")
 
-    @patch("cli_web.unsplash.core.client.curl_requests.Session")
-    def test_connect_error_raises_network_error(self, mock_session_cls):
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-        mock_session.get.side_effect = OSError("failed")
-
-        client = UnsplashClient()
-        with pytest.raises(NetworkError):
-            client.get_topic("test")
-
-    @patch("cli_web.unsplash.core.client.curl_requests.Session")
-    def test_successful_json_response(self, mock_session_cls):
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
+    @patch.object(UnsplashClient, "_navigate")
+    def test_successful_json_response(self, mock_nav):
         expected = {"id": "abc", "slug": "test-photo-abc"}
-        mock_session.get.return_value = self._mock_response(200, json_data=expected)
-
+        mock_nav.return_value = (200, json.dumps(expected), {})
         client = UnsplashClient()
         result = client.get_photo("abc")
         assert result == expected
@@ -124,63 +93,40 @@ class TestClientErrorMapping:
 
 
 class TestClientMethods:
-    @patch("cli_web.unsplash.core.client.curl_requests.Session")
-    def test_search_photos_passes_params(self, mock_session_cls):
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-        mock_session.get.return_value = self._mock_response(
-            200, json_data={"total": 0, "results": []}
-        )
-
+    @patch.object(UnsplashClient, "_navigate")
+    def test_search_photos_passes_params(self, mock_nav):
+        mock_nav.return_value = (200, json.dumps({"total": 0, "results": []}), {})
         client = UnsplashClient()
         client.search_photos("cats", page=2, per_page=10, orientation="landscape", color="blue")
 
-        mock_session.get.assert_called_once()
-        call_args = mock_session.get.call_args
-        assert call_args[0][0] == "https://unsplash.com/napi/search/photos"
-        params = call_args[1]["params"]
-        assert params["query"] == "cats"
-        assert params["page"] == 2
-        assert params["per_page"] == 10
-        assert params["orientation"] == "landscape"
-        assert params["color"] == "blue"
+        url = mock_nav.call_args[0][0]
+        assert url.startswith("https://unsplash.com/napi/search/photos?")
+        assert "query=cats" in url
+        assert "page=2" in url
+        assert "per_page=10" in url
+        assert "orientation=landscape" in url
+        assert "color=blue" in url
 
-    @patch("cli_web.unsplash.core.client.curl_requests.Session")
-    def test_search_photos_omits_none_params(self, mock_session_cls):
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-        mock_session.get.return_value = self._mock_response(
-            200, json_data={"total": 0, "results": []}
-        )
-
+    @patch.object(UnsplashClient, "_navigate")
+    def test_search_photos_omits_none_params(self, mock_nav):
+        mock_nav.return_value = (200, json.dumps({"total": 0, "results": []}), {})
         client = UnsplashClient()
         client.search_photos("dogs")
 
-        params = mock_session.get.call_args[1]["params"]
-        assert "orientation" not in params
-        assert "color" not in params
+        url = mock_nav.call_args[0][0]
+        assert "orientation=" not in url
+        assert "color=" not in url
 
-    @patch("cli_web.unsplash.core.client.curl_requests.Session")
-    def test_get_random_photos_params(self, mock_session_cls):
-        mock_session = MagicMock()
-        mock_session_cls.return_value = mock_session
-        mock_session.get.return_value = self._mock_response(200, json_data=[])
-
+    @patch.object(UnsplashClient, "_navigate")
+    def test_get_random_photos_params(self, mock_nav):
+        mock_nav.return_value = (200, json.dumps([]), {})
         client = UnsplashClient()
         client.get_random_photos(count=3, query="nature", orientation="portrait")
 
-        params = mock_session.get.call_args[1]["params"]
-        assert params["count"] == 3
-        assert params["query"] == "nature"
-        assert params["orientation"] == "portrait"
-
-    def _mock_response(self, status_code, json_data=None):
-        resp = MagicMock()
-        resp.status_code = status_code
-        resp.headers = {}
-        if json_data is not None:
-            resp.json.return_value = json_data
-        return resp
+        url = mock_nav.call_args[0][0]
+        assert "count=3" in url
+        assert "query=nature" in url
+        assert "orientation=portrait" in url
 
 
 # ── Model formatting tests ───────────────────────────────────────

@@ -1,11 +1,18 @@
-"""HTTP client for Unsplash internal /napi/ endpoints.
+"""Browser-backed client for Unsplash's internal /napi/ endpoints.
 
-Uses curl_cffi with Chrome TLS impersonation to bypass anti-bot protection.
+unsplash.com is gated by an Anubis JS proof-of-work challenge that returns
+HTTP 401 to plain HTTP clients (curl_cffi/httpx). We drive a stealth headless
+browser (camoufox) to solve the challenge once on the homepage, then fetch the
+JSON /napi/ endpoints within that cleared browser session.
 """
 
 from __future__ import annotations
 
-from curl_cffi import requests as curl_requests
+import atexit
+import json
+from urllib.parse import urlencode
+
+from camoufox.sync_api import Camoufox
 
 from .exceptions import (
     NetworkError,
@@ -22,44 +29,85 @@ class UnsplashClient:
     """Client for Unsplash's internal /napi/ REST API."""
 
     def __init__(self) -> None:
-        self._session = curl_requests.Session(
-            impersonate="chrome131",
-            headers={"Accept": "application/json"},
-            timeout=30,
-        )
+        self._cm = None
+        self._browser = None
+        self._page = None
 
-    def close(self) -> None:
-        self._session.close()
+    def _ensure_browser(self) -> None:
+        """Lazily launch the browser and clear the Anubis challenge (once).
+
+        Done lazily so the client works whether or not it's used as a context
+        manager. The browser is torn down on process exit via atexit.
+        """
+        if self._page is not None:
+            return
+        try:
+            self._cm = Camoufox(headless=True)
+            self._browser = self._cm.__enter__()
+            self._page = self._browser.new_page()
+            # Solve the proof-of-work challenge on the homepage; /napi/ clears after.
+            self._page.goto(f"{BASE_URL}/", wait_until="domcontentloaded", timeout=45000)
+            self._page.wait_for_timeout(3000)
+        except Exception as exc:
+            self.close()
+            raise NetworkError(f"Failed to initialize browser session: {exc}") from exc
+        atexit.register(self.close)
 
     def __enter__(self) -> UnsplashClient:
+        self._ensure_browser()
         return self
 
     def __exit__(self, *args) -> None:
         self.close()
 
+    def close(self) -> None:
+        if self._cm is not None:
+            try:
+                self._cm.__exit__(None, None, None)
+            except Exception:
+                pass
+            finally:
+                self._cm = self._browser = self._page = None
+
     # ── HTTP helpers ────────────────────────────────────────────
+
+    def _navigate(self, url: str) -> tuple[int, str, dict]:
+        """Fetch *url* in the browser session; return (status, body, headers)."""
+        self._ensure_browser()
+        try:
+            resp = self._page.goto(url, wait_until="domcontentloaded", timeout=30000)
+        except Exception as exc:
+            raise NetworkError(f"Request failed: {exc}") from exc
+        if resp is None:
+            raise NetworkError(f"No response for {url}")
+        return resp.status, resp.text(), resp.headers
 
     def _get(self, path: str, params: dict | None = None) -> dict | list:
         url = f"{BASE_URL}{path}"
-        try:
-            resp = self._session.get(url, params=params)
-        except Exception as exc:
-            raise NetworkError(f"Request failed: {exc}") from exc
+        if params:
+            query = urlencode({k: v for k, v in params.items() if v is not None})
+            if query:
+                url = f"{url}?{query}"
 
-        if resp.status_code == 404:
+        status, body, headers = self._navigate(url)
+
+        if status == 404:
             raise NotFoundError(f"Not found: {path}")
-        if resp.status_code == 429:
-            retry = resp.headers.get("retry-after")
+        if status == 429:
+            retry = headers.get("retry-after")
             raise RateLimitError(
                 "Rate limited by Unsplash",
                 retry_after=float(retry) if retry else None,
             )
-        if resp.status_code >= 500:
-            raise ServerError(f"Server error {resp.status_code}", status_code=resp.status_code)
-        if resp.status_code >= 400:
-            raise UnsplashError(f"HTTP {resp.status_code}: {resp.text[:200]}")
+        if status >= 500:
+            raise ServerError(f"Server error {status}", status_code=status)
+        if status >= 400:
+            raise UnsplashError(f"HTTP {status}: {body[:200]}")
 
-        return resp.json()
+        try:
+            return json.loads(body)
+        except (ValueError, TypeError) as exc:
+            raise UnsplashError(f"Invalid JSON response from {path}") from exc
 
     # ── Search ──────────────────────────────────────────────────
 

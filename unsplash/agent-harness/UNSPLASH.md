@@ -7,9 +7,9 @@
 - **Framework**: React SPA (custom, not Next.js/Nuxt)
 - **Protocol**: REST JSON via internal `/napi/` endpoints
 - **Auth**: None required for read operations (downloads require login)
-- **Protections**: Anti-bot challenge (added ~March 2026) — requires `curl_cffi` with Chrome TLS impersonation
+- **Protections**: Anubis JS proof-of-work challenge (escalated ~June 2026) — the entire site 401s any non-browser client ("Making sure you're not a bot!"). `curl_cffi`/`httpx` can no longer pass it; a real browser must execute the PoW.
 - **Rate Limits**: Headers present (`x-ratelimit-limit: 99999999`) — generous limits
-- **HTTP Client**: `curl_cffi` with `impersonate="chrome131"` — plain httpx gets 401 "Making sure you're not a bot!"
+- **HTTP Client**: `camoufox` (stealth headless Firefox) solves the challenge on the homepage, then fetches `/napi/` JSON within that cleared session. Image downloads hit the CDN (`images.unsplash.com`, not challenged) and still use `curl_cffi`. **Prereq:** run `python -m camoufox fetch` once after install.
 
 ## API Base
 

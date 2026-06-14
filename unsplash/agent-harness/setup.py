@@ -13,6 +13,12 @@ setup(
     python_requires=">=3.10",
     install_requires=[
         "click>=8.0",
+        # unsplash.com/napi is behind an Anubis JS proof-of-work challenge that
+        # blocks plain HTTP clients; camoufox (stealth headless Firefox) solves
+        # it. After install, run once: python -m camoufox fetch
+        "camoufox>=0.4",
+        # The image CDN (images.unsplash.com) is not challenged — plain
+        # curl_cffi is used to download photo bytes.
         "curl_cffi",
         "rich>=13.0",
         "prompt_toolkit>=3.0",

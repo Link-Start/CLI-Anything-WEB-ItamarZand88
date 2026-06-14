@@ -8,6 +8,7 @@ No API key or authentication required.
 ```bash
 cd unsplash/agent-harness
 pip install -e .
+python -m camoufox fetch   # one-time: downloads the stealth browser used to bypass the anti-bot challenge
 ```
 
 Verify:
@@ -107,5 +108,6 @@ python -m pytest cli_web/unsplash/tests/ -v
 
 - Python >= 3.10
 - click >= 8.0
-- curl_cffi (Chrome TLS impersonation for anti-bot bypass)
+- camoufox (stealth headless Firefox) — solves the Anubis JS proof-of-work challenge on `/napi/`; run `python -m camoufox fetch` once after install
+- curl_cffi — used for image downloads from the CDN (not challenged)
 - rich >= 13.0
