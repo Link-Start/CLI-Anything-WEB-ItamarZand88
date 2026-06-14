@@ -31,27 +31,26 @@ tag `vX.Y.Z`) is *not* published to PyPI — only the Python packages are.
 2. **`.github/workflows/publish.yml`** triggers on each release, resolves the
    package directory generically from `release-please-config.json` (component →
    path — so adding a new CLI needs no workflow change), builds it with
-   `python -m build`, and publishes via **PyPI trusted publishing** (GitHub
-   OIDC — no API tokens stored in the repo).
+   `python -m build`, and uploads it with a single account-scoped **PyPI API
+   token** (the `PYPI_API_TOKEN` secret on the `pypi` environment). One secret
+   covers every package.
 
 ## One-time setup (repo owner)
 
 1. **Create the GitHub environment.** In repo *Settings → Environments*, create
    one named `pypi` (optionally with required reviewers for release protection).
 
-2. **Add a Trusted Publisher for each of the 23 projects on PyPI.** Use the
-   [pending publisher](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/)
-   flow to claim each name *before* its first publish (this also reserves the
-   names so they can't be squatted). For every project — *Manage → Publishing →
-   Add a new publisher* (or *Your projects → Publishing* for a pending one):
-   - Owner: `ItamarZand88`
-   - Repository: `CLI-Anything-WEB`
-   - Workflow name: `publish.yml`
-   - Environment name: `pypi`
+2. **Create a PyPI API token and store it as a secret.**
+   - On PyPI: *Account settings → API tokens → Add API token*, scope **"Entire
+     account"** (project-scoped tokens can't be created until the projects
+     exist), and copy it.
+   - On GitHub: *Settings → Environments → `pypi` → Add secret* (or a repo
+     secret), named **`PYPI_API_TOKEN`**, with the token as the value.
 
-   The project names to register are the 22 in the table above:
-   `cli-web-core`, `cli-web-devkit`, `cli-anything-web`, and `cli-web-<app>` for
-   each app (`cli-web-futbin`, `cli-web-notebooklm`, … `cli-web-worldcup`).
+   Once the packages are published you can, if you prefer, swap the account
+   token for per-project tokens — or migrate to
+   [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) (OIDC, no
+   stored secret) and delete the token.
 
 ## First release
 
@@ -59,8 +58,7 @@ The manifest is seeded at each package's current version (`0.1.0` for the CLIs
 and the umbrella), so the **next** conventional commit touching a package cuts
 its first published release. To publish a package immediately without waiting
 for a change, use release-please's
-[`release-as`](https://github.com/googleapis/release-please/blob/main/docs/customizing.md#how-do-i-change-the-version-number)
-(e.g. a `chore: release` commit with `Release-As: 0.1.0`).
+[`release-as`](https://github.com/googleapis/release-please/blob/main/docs/customizing.md#how-do-i-change-the-version-number).
 
 ## The umbrella package
 
