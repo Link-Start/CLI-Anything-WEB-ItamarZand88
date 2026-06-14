@@ -1,0 +1,83 @@
+name: Publish backfill (daily)
+
+# PyPI throttles NEW-project creation (~20/hr per account, ~40/hr per IP — see
+# docs/PUBLISHING.md), so the fleet's first-ever publish can't all land at once.
+# This job runs daily: it finds every package not yet on PyPI, builds it at its
+# current version (from main) and uploads with --skip-existing, tolerating 429s.
+# Each run publishes as many as the limit allows; over a few days the whole
+# fleet lands. Progress is written to the run summary.
+#
+# Once everything is published this becomes a quick daily no-op — safe to delete
+# the workflow then.
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # daily, 06:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build + publish any package not yet on PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: |
+          python -m pip install --quiet build twine
+
+          {
+            echo "## Publish backfill — $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo ""
+            echo "| Package | Result |"
+            echo "|---------|--------|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          published=0 ratelimited=0 already=0 failed=0
+          # Every python-release package (component path -> PyPI name).
+          pkgs=$(jq -r '.packages | to_entries[]
+                        | select(.value["release-type"] == "python")
+                        | "\(.key)\t\(.value["package-name"])"' release-please-config.json)
+
+          while IFS=$'\t' read -r dir pkg; do
+            [ -z "$pkg" ] && continue
+            code=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/$pkg/json")
+            if [ "$code" = "200" ]; then
+              already=$((already + 1)); continue
+            fi
+
+            rm -rf dist && mkdir -p dist
+            if ! python -m build "$dir" --outdir dist >/dev/null 2>&1; then
+              echo "| \`$pkg\` | ⚠️ build failed |" >> "$GITHUB_STEP_SUMMARY"
+              failed=$((failed + 1)); continue
+            fi
+
+            if twine upload --skip-existing --non-interactive dist/* >/dev/null 2>&1; then
+              echo "| \`$pkg\` | ✅ published |" >> "$GITHUB_STEP_SUMMARY"
+              published=$((published + 1))
+            else
+              echo "| \`$pkg\` | ⏳ rate-limited — retry tomorrow |" >> "$GITHUB_STEP_SUMMARY"
+              ratelimited=$((ratelimited + 1))
+            fi
+            sleep 5
+          done <<< "$pkgs"
+
+          total=$(jq '[.packages[] | select(.["release-type"] == "python")] | length' release-please-config.json)
+          live=$((already + published))
+          {
+            echo ""
+            echo "**Published this run: $published · already live: $already · "
+            echo "rate-limited: $ratelimited · build-failed: $failed**"
+            echo ""
+            echo "Fleet on PyPI: **$live / $total**"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "published=$published rate-limited=$ratelimited live=$live/$total"
