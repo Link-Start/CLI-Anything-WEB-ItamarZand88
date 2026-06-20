@@ -511,6 +511,44 @@ class TestTranscript:
             with pytest.raises(NotFoundError):
                 c.transcript("x")
 
+    def test_timedtext_url_forces_json3_over_srv3(self):
+        # Real baseUrls ship fmt=srv3 (XML); we must override to json3, not
+        # append a duplicate fmt= that YouTube ignores (regression: empty output).
+        from urllib.parse import parse_qs, urlsplit
+
+        from cli_web.youtube.core.client import YouTubeClient
+
+        url = YouTubeClient._timedtext_url(
+            "https://www.youtube.com/api/timedtext?v=x&lang=en&fmt=srv3", translate=None
+        )
+        q = parse_qs(urlsplit(url).query)
+        assert q["fmt"] == ["json3"]
+        assert q["lang"] == ["en"]
+
+    def test_timedtext_url_adds_tlang(self):
+        from urllib.parse import parse_qs, urlsplit
+
+        from cli_web.youtube.core.client import YouTubeClient
+
+        url = YouTubeClient._timedtext_url(
+            "https://www.youtube.com/api/timedtext?v=x", translate="fr"
+        )
+        q = parse_qs(urlsplit(url).query)
+        assert q["fmt"] == ["json3"] and q["tlang"] == ["fr"]
+
+    def test_transcript_fetch_rate_limited_raises(self):
+        # YouTube heavily throttles the timedtext endpoint — must surface as a
+        # typed rate limit (exit 5), not a generic error.
+        c = self._client()
+        mock_resp = MagicMock(status_code=429, headers={"retry-after": "30"})
+        with (
+            patch.object(c, "_post", return_value=self.PLAYER_WITH_CAPTIONS),
+            patch.object(c._session, "get", return_value=mock_resp),
+        ):
+            with pytest.raises(RateLimitError) as exc:
+                c.transcript("abc123")
+        assert exc.value.retry_after == 30.0
+
     def test_extract_video_id(self):
         from cli_web.youtube.utils.helpers import extract_video_id
 

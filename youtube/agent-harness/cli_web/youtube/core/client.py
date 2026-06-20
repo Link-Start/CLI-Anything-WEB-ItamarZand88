@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from urllib.parse import parse_qs, urlencode, urlsplit, urlunsplit
+
 import httpx
 
 from .exceptions import (
@@ -23,6 +25,18 @@ INNERTUBE_CONTEXT = {
     "client": {
         "clientName": "WEB",
         "clientVersion": "2.20260326.01.00",
+        "hl": "en",
+        "gl": "US",
+    }
+}
+
+# The WEB player returns playabilityStatus=UNPLAYABLE and omits caption tracks;
+# the ANDROID client returns OK with the full captionTracks list (no auth).
+ANDROID_CONTEXT = {
+    "client": {
+        "clientName": "ANDROID",
+        "clientVersion": "20.10.38",
+        "androidSdkVersion": 30,
         "hl": "en",
         "gl": "US",
     }
@@ -54,10 +68,10 @@ class YouTubeClient:
 
     # ── Internal ──────────────────────────────────────────────
 
-    def _post(self, endpoint: str, body: dict) -> dict:
+    def _post(self, endpoint: str, body: dict, context: dict | None = None) -> dict:
         """POST to InnerTube API with context."""
         url = f"{INNERTUBE_URL}/{endpoint}?prettyPrint=false"
-        payload = {"context": INNERTUBE_CONTEXT, **body}
+        payload = {"context": context or INNERTUBE_CONTEXT, **body}
         try:
             resp = self._session.post(url, json=payload)
         except httpx.TimeoutException as exc:
@@ -134,8 +148,12 @@ class YouTubeClient:
     # ── Transcripts ───────────────────────────────────────────
 
     def _caption_tracks(self, video_id: str) -> tuple[list[dict], str]:
-        """Return (caption_tracks, video_title) from the player response."""
-        resp = self._post("player", {"videoId": video_id})
+        """Return (caption_tracks, video_title) from the player response.
+
+        Uses the ANDROID client: the WEB player reports UNPLAYABLE and omits
+        the caption track list.
+        """
+        resp = self._post("player", {"videoId": video_id}, context=ANDROID_CONTEXT)
         details = resp.get("videoDetails")
         if not details:
             raise NotFoundError(f"Video not found: {video_id}")
@@ -145,6 +163,18 @@ class YouTubeClient:
             .get("captionTracks", [])
         )
         return tracks, details.get("title", "")
+
+    @staticmethod
+    def _timedtext_url(base_url: str, translate: str | None) -> str:
+        """Force the timedtext URL to json3 (the baseUrl ships fmt=srv3 = XML)."""
+        parts = urlsplit(base_url)
+        query = parse_qs(parts.query)
+        query["fmt"] = ["json3"]
+        if translate:
+            query["tlang"] = [translate]
+        return urlunsplit(
+            (parts.scheme, parts.netloc, parts.path, urlencode(query, doseq=True), parts.fragment)
+        )
 
     @staticmethod
     def _track_label(track: dict) -> str:
@@ -233,14 +263,24 @@ class YouTubeClient:
         if not base_url:
             raise ParseError(f"Caption track has no URL for video: {video_id}")
 
-        url = base_url + ("&" if "?" in base_url else "?") + "fmt=json3"
-        if translate:
-            url += f"&tlang={translate}"
+        url = self._timedtext_url(base_url, translate)
 
         try:
             resp = self._session.get(url)
         except Exception as exc:
             raise NetworkError(f"Failed to fetch transcript: {exc}") from exc
+        if resp.status_code == 429:
+            # YouTube throttles the timedtext endpoint hard, especially the
+            # `tlang` server-side translation — surface it as a real rate limit.
+            retry = resp.headers.get("retry-after")
+            raise RateLimitError(retry_after=float(retry) if retry else None)
+        if resp.status_code == 404:
+            raise NotFoundError(f"Transcript not found for video: {video_id}")
+        if resp.status_code >= 500:
+            raise ServerError(
+                f"YouTube server error: HTTP {resp.status_code}",
+                status_code=resp.status_code,
+            )
         if resp.status_code >= 400:
             raise YouTubeError(f"HTTP {resp.status_code} fetching transcript")
 
