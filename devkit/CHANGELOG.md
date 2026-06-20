@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/ItamarZand88/CLI-Anything-WEB/compare/cli-web-devkit-v0.3.0...cli-web-devkit-v0.3.1) (2026-06-20)
+
+
+### Bug Fixes
+
+* **canary:** classify anti-bot blocks vs real breakage; relax envelope check ([e75893b](https://github.com/ItamarZand88/CLI-Anything-WEB/commit/e75893b6749e05136390bc17320b69db49b954e7))
+
 ## [0.3.0](https://github.com/ItamarZand88/CLI-Anything-WEB/compare/cli-web-devkit-v0.2.0...cli-web-devkit-v0.3.0) (2026-06-14)
 
 

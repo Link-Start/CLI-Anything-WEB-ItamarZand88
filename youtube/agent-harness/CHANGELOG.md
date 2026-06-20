@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.1](https://github.com/ItamarZand88/CLI-Anything-WEB/compare/cli-web-youtube-v0.1.0...cli-web-youtube-v0.1.1) (2026-06-20)
+
+
+### Features
+
+* **youtube:** add transcript fetching (timestamped, multi-language, translatable) ([#40](https://github.com/ItamarZand88/CLI-Anything-WEB/issues/40)) ([95d0381](https://github.com/ItamarZand88/CLI-Anything-WEB/commit/95d0381513661cae3999fea202de73517928a09c))
+
+
+### Bug Fixes
+
+* **youtube:** make transcript fetching actually work (ANDROID client + json3) ([40c6b6d](https://github.com/ItamarZand88/CLI-Anything-WEB/commit/40c6b6d26a7660604fbc8a1dfa2d78c2dd5eb318))
+
 ## 0.1.0 (2026-06-14)
 
 
