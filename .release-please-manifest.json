@@ -1,7 +1,7 @@
 {
-  ".": "0.13.1",
+  ".": "0.14.0",
   "cli-web-core": "1.1.0",
-  "devkit": "0.3.0",
+  "devkit": "0.3.1",
   "futbin/agent-harness": "0.1.0",
   "notebooklm/agent-harness": "0.1.0",
   "gh-trending/agent-harness": "0.1.1",
@@ -12,7 +12,7 @@
   "pexels/agent-harness": "0.1.0",
   "reddit/agent-harness": "0.1.0",
   "gai/agent-harness": "0.1.0",
-  "youtube/agent-harness": "0.1.0",
+  "youtube/agent-harness": "0.1.1",
   "hackernews/agent-harness": "0.1.0",
   "codewiki/agent-harness": "0.1.0",
   "chatgpt/agent-harness": "0.1.0",

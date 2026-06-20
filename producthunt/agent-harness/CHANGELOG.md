@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/ItamarZand88/CLI-Anything-WEB/compare/cli-web-producthunt-v0.1.1...cli-web-producthunt-v0.1.1) (2026-06-20)
+
+
+### Features
+
+* **youtube:** add transcript fetching (timestamped, multi-language, translatable) ([#40](https://github.com/ItamarZand88/CLI-Anything-WEB/issues/40)) ([95d0381](https://github.com/ItamarZand88/CLI-Anything-WEB/commit/95d0381513661cae3999fea202de73517928a09c))
+
 ## [0.1.1](https://github.com/ItamarZand88/CLI-Anything-WEB/compare/cli-web-producthunt-v0.1.0...cli-web-producthunt-v0.1.1) (2026-06-14)
 
 
