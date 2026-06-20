@@ -95,14 +95,19 @@ def _cmd_canary(args: argparse.Namespace) -> int:
     if args.json_out:
         print(_json.dumps(report.to_dict(), indent=2))
     else:
+        marks = {"ok": "PASS", "blocked": "BLOCK", "broken": "FAIL"}
         for r in report.results:
-            mark = "PASS" if r.ok else "FAIL"
+            mark = marks.get(r.status, "FAIL")
             detail = f"  ({r.detail})" if r.detail else ""
             print(f"{mark}  {r.cli:24} {' '.join(r.argv)}{detail}")
+        passed = len(report.results) - len(report.failures)
         print(
-            f"\n{len(report.results) - len(report.failures)} passed, {len(report.failures)} failed"
+            f"\n{passed} passed, {len(report.broken)} broken, "
+            f"{len(report.blocked)} blocked (anti-bot/transient, not actionable)"
         )
-    return 1 if report.failures else 0
+    # Only real breakage is actionable; an anti-bot block of the CI runner's IP
+    # must not fail the run (it would reopen a "site breakage" issue every day).
+    return 1 if report.broken else 0
 
 
 def _cmd_gaps(args: argparse.Namespace) -> int:

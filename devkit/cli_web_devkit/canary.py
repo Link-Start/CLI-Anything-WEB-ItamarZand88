@@ -24,6 +24,7 @@ class CanaryResult:
     argv: list[str]
     ok: bool
     detail: str = ""
+    status: str = "ok"  # "ok" | "blocked" | "broken"
 
 
 @dataclass
@@ -34,13 +35,62 @@ class CanaryReport:
     def failures(self) -> list[CanaryResult]:
         return [r for r in self.results if not r.ok]
 
+    @property
+    def broken(self) -> list[CanaryResult]:
+        """Actionable failures — the CLI's own logic/parsing broke."""
+        return [r for r in self.results if r.status == "broken"]
+
+    @property
+    def blocked(self) -> list[CanaryResult]:
+        """Non-actionable failures — the target bot-blocked/rate-limited our IP."""
+        return [r for r in self.results if r.status == "blocked"]
+
     def to_dict(self) -> dict[str, object]:
         return {
             "ok": not self.failures,
             "total": len(self.results),
             "failed": len(self.failures),
+            "broken": len(self.broken),
+            "blocked": len(self.blocked),
             "results": [asdict(r) for r in self.results],
         }
+
+
+# Anti-bot / rate-limit / transient signatures. When a canary fails with one of
+# these, the target blocked our (datacenter) runner IP or throttled us — the CLI
+# still works for real users, so this is NOT actionable via /refine and must not
+# masquerade as "site breakage". Everything else is a real logic/parse break.
+_BLOCKED_MARKERS = (
+    "403",
+    "429",
+    "502",
+    "503",
+    "cloudflare",
+    "just a moment",
+    "not a bot",
+    "bm-verify",
+    "anubis",
+    "captcha",
+    "datadome",
+    "perimeterx",
+    "akamai",
+    "rate limit",
+    "rate_limited",
+    "auth_expired",
+    "server_error",
+    "challenge",
+    "verify you are human",
+    "access denied",
+    "forbidden",
+    "too many requests",
+    "timed out",
+)
+
+
+def _classify_failure(*signals: str) -> str:
+    """Classify a failure as 'blocked' (anti-bot/transient) or 'broken' (logic)."""
+    haystack = " ".join(signals).lower()
+    return "blocked" if any(marker in haystack for marker in _BLOCKED_MARKERS) else "broken"
 
 
 def _parse_json_output(stdout: str) -> object:
@@ -59,10 +109,18 @@ def _parse_json_output(stdout: str) -> object:
 def _check_envelope(stdout: str) -> str | None:
     """Return an error description, or None if the output is healthy.
 
-    Pre-v2.1 fleet CLIs emit bare JSON arrays/objects rather than the
-    ``{"success": true, "data": ...}`` envelope (CONVENTIONS.md §Exit Codes
-    fleet note); the canary asks "is the site still serving us data", so any
-    valid JSON that is not an error envelope counts as healthy.
+    The canary asks one question: "is the site still serving us data?" — so
+    any valid JSON that is not an *error* response counts as healthy. It does
+    not police envelope style: the fleet's dominant success shape is
+    ``{"success": true, <domain fields>}`` (suggestions, locations, items…),
+    a handful wrap payloads as ``{"success": true, "data": ...}``, and pre-v2.1
+    CLIs emit bare arrays/objects. All three are live-site-healthy. Envelope
+    conformance is the contract test's job (``cli-web-devkit contract``), not
+    this live smoke — enforcing it here turns ordinary style drift into
+    false "site breakage" alerts.
+
+    Rejected: non-JSON output, an ``{"error": true}`` envelope, or an explicit
+    ``{"success": false}``.
     """
     try:
         payload = _parse_json_output(stdout)
@@ -72,15 +130,17 @@ def _check_envelope(stdout: str) -> str | None:
         return None  # legacy bare-array output
     if payload.get("error"):
         return f"CLI returned error envelope: {payload.get('code')}: {payload.get('message')}"
-    if "success" in payload and (payload.get("success") is not True or "data" not in payload):
-        return f"not a success envelope: keys={sorted(payload)}"
+    if "success" in payload and payload.get("success") is not True:
+        return (
+            f"not a success envelope (success={payload.get('success')!r}): keys={sorted(payload)}"
+        )
     return None
 
 
 def _run_one(entry: RegistryEntry, argv: list[str], timeout: float) -> CanaryResult:
     binary = shutil.which(entry.name)
     if binary is None:
-        return CanaryResult(entry.name, argv, False, "CLI not installed (not on PATH)")
+        return CanaryResult(entry.name, argv, False, "CLI not installed (not on PATH)", "broken")
     try:
         proc = subprocess.run(
             [binary, *argv],
@@ -90,13 +150,17 @@ def _run_one(entry: RegistryEntry, argv: list[str], timeout: float) -> CanaryRes
             check=False,
         )
     except subprocess.TimeoutExpired:
-        return CanaryResult(entry.name, argv, False, f"timed out after {timeout}s")
+        return CanaryResult(entry.name, argv, False, f"timed out after {timeout}s", "blocked")
     if proc.returncode != 0:
         detail = proc.stderr.strip() or proc.stdout.strip()
-        return CanaryResult(entry.name, argv, False, f"exit {proc.returncode}: {detail[:300]}")
+        detail = f"exit {proc.returncode}: {detail[:300]}"
+        return CanaryResult(entry.name, argv, False, detail, _classify_failure(detail))
     problem = _check_envelope(proc.stdout)
     if problem:
-        return CanaryResult(entry.name, argv, False, problem)
+        # A non-JSON body is usually an anti-bot interstitial, not a logic break —
+        # classify on the problem text plus a slice of the raw output.
+        status = _classify_failure(problem, proc.stdout[:300])
+        return CanaryResult(entry.name, argv, False, problem, status)
     return CanaryResult(entry.name, argv, True)
 
 

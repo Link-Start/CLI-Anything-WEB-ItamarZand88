@@ -52,22 +52,32 @@ jobs:
           script: |
             const fs = require('fs');
             const report = JSON.parse(fs.readFileSync('canary-report.json', 'utf8'));
-            const failures = report.results.filter(r => !r.ok);
+            // Only "broken" failures are actionable. "blocked" results (the
+            // target bot-blocked/rate-limited the CI runner's IP) work fine for
+            // real users and would otherwise reopen this issue every single day.
+            const failures = report.results.filter(r => r.status === 'broken');
+            const blocked = report.results.filter(r => r.status === 'blocked');
             const byCli = {};
             for (const f of failures) (byCli[f.cli] ??= []).push(f);
 
             const title = `Fleet canary: ${Object.keys(byCli).length} CLI(s) failing against live sites`;
             const lines = [
-              'The scheduled fleet canary detected live-site breakage.',
+              'The scheduled fleet canary detected live-site breakage in a CLI’s own logic/parsing.',
               '',
               ...Object.entries(byCli).flatMap(([cli, fails]) => [
                 `### ${cli}`,
                 ...fails.map(f => `- \`${f.argv.join(' ')}\` — ${f.detail}`),
                 '',
               ]),
-              '_Likely causes: site redesign, API change, or new anti-bot protection._',
+              '_Likely causes: site redesign or API change._',
               '_Next step: run `/refine` on the affected CLI (see cli-anything-web-plugin)._',
             ];
+            if (blocked.length) {
+              lines.push(
+                '',
+                `_Also ${blocked.length} CLI command(s) were anti-bot/rate-limit blocked from the CI runner IP — not listed here, as they work for real users and are not /refine-able._`,
+              );
+            }
 
             const { data: issues } = await github.rest.issues.listForRepo({
               owner: context.repo.owner,
