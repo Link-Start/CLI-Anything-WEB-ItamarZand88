@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/ItamarZand88/CLI-Anything-WEB/compare/cli-web-reddit-v0.1.0...cli-web-reddit-v0.1.1) (2026-06-21)
+
+
+### Bug Fixes
+
+* **reddit:** route reads through OAuth API and clarify auth-required error ([#45](https://github.com/ItamarZand88/CLI-Anything-WEB/issues/45)) ([03b9c86](https://github.com/ItamarZand88/CLI-Anything-WEB/commit/03b9c868fcc8b4b5f2be1a33cc70e6e0928f5c09))
+
 ## 0.1.0 (2026-06-14)
 
 
