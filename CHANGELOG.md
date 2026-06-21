@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.14.1](https://github.com/ItamarZand88/CLI-Anything-WEB/compare/v0.14.0...v0.14.1) (2026-06-21)
+
+
+### Bug Fixes
+
+* **reddit:** route reads through OAuth API and clarify auth-required error ([#45](https://github.com/ItamarZand88/CLI-Anything-WEB/issues/45)) ([03b9c86](https://github.com/ItamarZand88/CLI-Anything-WEB/commit/03b9c868fcc8b4b5f2be1a33cc70e6e0928f5c09))
+
 ## [0.14.0](https://github.com/ItamarZand88/CLI-Anything-WEB/compare/v0.13.1...v0.14.0) (2026-06-20)
 
 
