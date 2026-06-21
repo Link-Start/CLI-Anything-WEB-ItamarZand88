@@ -290,6 +290,35 @@ class TestClient:
         data = client.feed_hot(limit=3)
         assert data["data"]["children"][0]["kind"] == "t3"
 
+    def test_to_oauth_path_strips_json_suffix(self):
+        from cli_web.reddit.core.client import RedditClient
+
+        assert RedditClient._to_oauth_path("/r/x/about.json") == "/r/x/about"
+        assert RedditClient._to_oauth_path("/r/x/about/rules.json") == "/r/x/about/rules"
+        assert RedditClient._to_oauth_path("/hot/.json") == "/hot"
+        assert RedditClient._to_oauth_path("/r/x/search.json") == "/r/x/search"
+        assert RedditClient._to_oauth_path("/api/v1/me") == "/api/v1/me"
+
+    @patch("cli_web.reddit.core.client.curl_requests.Session")
+    @patch("cli_web.reddit.core.client.get_bearer_token", return_value="tok123")
+    def test_reads_route_through_oauth_when_authed(self, mock_token, MockSession):
+        """With a bearer token, reads hit oauth.reddit.com (not the public
+        .json API, which Reddit now 403s) and carry the Authorization header."""
+        from cli_web.reddit.core.client import OAUTH_URL, RedditClient
+
+        session = MagicMock()
+        MockSession.return_value = session
+        session.get.return_value = _mock_response(json_data=SAMPLE_LISTING)
+
+        client = RedditClient()
+        client.feed_hot(limit=3)
+
+        oauth_calls = [c for c in session.get.call_args_list if "oauth.reddit.com" in c.args[0]]
+        assert oauth_calls, "authenticated read should go through oauth.reddit.com"
+        last = oauth_calls[-1]
+        assert last.args[0] == f"{OAUTH_URL}/hot"  # .json suffix stripped for OAuth
+        assert last.kwargs["headers"]["Authorization"] == "Bearer tok123"
+
     @patch("cli_web.reddit.core.client.curl_requests.Session")
     @patch("cli_web.reddit.core.client.get_bearer_token", return_value=None)
     def test_404_raises_not_found(self, mock_token, MockSession):

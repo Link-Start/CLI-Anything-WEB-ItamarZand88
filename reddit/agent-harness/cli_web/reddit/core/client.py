@@ -48,7 +48,27 @@ class RedditClient:
 
     # ── HTTP helpers ────────────────────────────────────────────
 
+    @staticmethod
+    def _to_oauth_path(path: str) -> str:
+        """Map a public ``.json`` path to its oauth.reddit.com equivalent.
+
+        The OAuth API serves the same endpoints without the ``.json`` suffix
+        and returns JSON natively: ``/r/x/about.json`` -> ``/r/x/about``,
+        ``/hot/.json`` -> ``/hot``.
+        """
+        if path.endswith("/.json"):
+            return path[: -len("/.json")]
+        if path.endswith(".json"):
+            return path[: -len(".json")]
+        return path
+
     def _get(self, path: str, params: dict | None = None) -> dict | list:
+        # Reddit now 403s the public www.reddit.com/.json API for non-OAuth
+        # clients. When we have a bearer token, read through oauth.reddit.com
+        # (same endpoints, minus the .json suffix); fall back to the public
+        # path only when logged out.
+        if get_bearer_token():
+            return self._oauth_get(self._to_oauth_path(path), params=params)
         url = f"{BASE_URL}{path}"
         try:
             resp = self._session.get(url, params=params)

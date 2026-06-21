@@ -16,10 +16,11 @@ setup(
         "curl_cffi",
         "rich>=13.0",
         "prompt_toolkit>=3.0",
+        # Required: auth login (and silent token refresh) drive a real browser
+        # via playwright, and Reddit now 403s anonymous reads, so a logged-in
+        # session is needed for every command.
+        "playwright>=1.40.0",
     ],
-    extras_require={
-        "browser": ["playwright>=1.40.0"],
-    },
     entry_points={
         "console_scripts": [
             "cli-web-reddit=cli_web.reddit.reddit_cli:main",
