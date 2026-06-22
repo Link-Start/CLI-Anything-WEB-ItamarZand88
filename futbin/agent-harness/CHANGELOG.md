@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.2.0](https://github.com/Link-Start/CLI-Anything-WEB-ItamarZand88/compare/cli-web-futbin-v0.1.0...cli-web-futbin-v0.2.0) (2026-06-22)
+
+
+### Features
+
+* fleet-wide doctor command (self-diagnosis) via vendored core module ([5c2f403](https://github.com/Link-Start/CLI-Anything-WEB-ItamarZand88/commit/5c2f4032b1da6d4d12f8aeb04899c373e953c363))
+* **futbin:** add market analysis, arbitrage, scan, versions commands + trading knowledge base ([45aba74](https://github.com/Link-Start/CLI-Anything-WEB-ItamarZand88/commit/45aba749a8054e7b5c8f34bf05cd962750d7a735))
+* **futbin:** market trading commands, price history, and fix player scraping ([#8](https://github.com/Link-Start/CLI-Anything-WEB-ItamarZand88/issues/8)) ([5e547ba](https://github.com/Link-Start/CLI-Anything-WEB-ItamarZand88/commit/5e547ba1dcd725da179f8bfcf6b4f20906610dea))
+* Phase 1+2 — quality gates, cli-web-devkit, cli-web-core, fleet sync ([bbb6a88](https://github.com/Link-Start/CLI-Anything-WEB-ItamarZand88/commit/bbb6a88276cdd1095665b56e900cb061bb529b35))
+* Phases 3-5 — generation v2, fleet ops, api-spec IR, MCP serve fleet-wide ([61caad1](https://github.com/Link-Start/CLI-Anything-WEB-ItamarZand88/commit/61caad16cb7915c440967cfee367f9ca99b64557))
+* refactor pipeline skill content to authoring/prompting best practices ([6170131](https://github.com/Link-Start/CLI-Anything-WEB-ItamarZand88/commit/6170131dca335753d286d37761f2776467ece43f))
+* shared runtime (cli-web-core), fleet devkit, and repo-wide quality gates ([2932dc2](https://github.com/Link-Start/CLI-Anything-WEB-ItamarZand88/commit/2932dc23bbb58cc1f36982c1abb9f8fc1de147be))
+
+
+### Bug Fixes
+
+* address code-review findings in shared runtime, pipeline, and quality gate ([06988a0](https://github.com/Link-Start/CLI-Anything-WEB-ItamarZand88/commit/06988a0266db671c58077379834febdccf65205d))
+* eliminate all remaining fleet and tooling bugs from the review ([b70aa65](https://github.com/Link-Start/CLI-Anything-WEB-ItamarZand88/commit/b70aa65007292655ac65b4797145302029c09181))
+
 ## 0.1.0 (2026-06-14)
 
 
